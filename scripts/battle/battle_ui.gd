@@ -16,9 +16,6 @@ func _ready() -> void:
 func append_log(line: String) -> void:
 	log.text = "%s\n%s" % [line, log.text]
 
-func reset_log() -> void:
-	log.text = "Combat log..."
-
 func _on_infusion_changed(value: float) -> void:
 	infusion_label.text = "%d%%" % int(value)
 	infusion_changed.emit(value / 100.0)

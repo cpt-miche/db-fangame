@@ -16,7 +16,7 @@ func _on_encounter_requested(enemy_id: StringName) -> void:
 	if not enemy_map.has(enemy_id):
 		push_warning("Unknown enemy id: %s" % enemy_id)
 		return
-	battle.start_battle(enemy_map[enemy_id])
+	battle.enemy_base = enemy_map[enemy_id]
 	world.visible = false
 	battle.visible = true
 	battle.process_mode = Node.PROCESS_MODE_INHERIT

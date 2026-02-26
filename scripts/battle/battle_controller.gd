@@ -11,7 +11,7 @@ signal battle_finished(result: String)
 @export var ki_volley_attack: AttackDef
 @export var ki_barrage_attack: AttackDef
 
-@onready var ui = $"../BattleUI"
+@onready var ui: Control = $"../BattleUI"
 
 var state := BattleState.new()
 var resolver := CombatResolver.new()
@@ -31,15 +31,6 @@ func _ready() -> void:
 	state.setup(player_base, enemy_base)
 	ui.action_pressed.connect(_on_action_pressed)
 	ui.infusion_changed.connect(func(v: float) -> void: infusion_ratio = v)
-	_refresh_view()
-
-
-func start_battle(next_enemy_base: FighterStats) -> void:
-	enemy_base = next_enemy_base
-	state.setup(player_base, enemy_base)
-	infusion_ratio = 0.0
-	ui.reset_log()
-	ui.infusion_slider.value = 0.0
 	_refresh_view()
 
 func _on_action_pressed(action_id: StringName) -> void:
