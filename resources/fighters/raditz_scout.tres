@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="FighterStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/fighter_stats.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+fighter_name = "Raditz (Scout)"
+max_hp = 430
+hp = 430
+max_stamina = 220
+stamina = 220
+max_stored_ki = 320
+stored_ki = 320
+max_drawn_ki = 220
+drawn_ki = 90
+physical_strength = 52
+ki_strength = 48
+speed = 40
+control = 36
