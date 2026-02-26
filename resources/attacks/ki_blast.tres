@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AttackDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/attack_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"ki_blast"
+label = "Ki Blast"
+attack_type = 1
+base_damage = 24.0
+scaling = 1.05
+stamina_cost = 4
+ki_cost = 22
+infusion_cap = 0.32
+base_hit = 0.75
+can_vanish = true
+attack_tier = 1
+escalation_gain = 8.0

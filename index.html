@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DB Fangame Vertical Slice MVP</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="layout">
+    <section class="panel world-panel">
+      <h1>DB Fangame MVP (Placeholder Art)</h1>
+      <canvas id="world" width="960" height="360" aria-label="World"></canvas>
+      <p id="worldHint" class="hint"></p>
+    </section>
+
+    <section class="panel battle-panel">
+      <h2>Battle</h2>
+      <div id="battleStatus" class="status">Approach Raditz and press <kbd>E</kbd> to start a fight.</div>
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <div id="controls" class="controls hidden">
+        <label for="kiInfusion">Drawn Ki Infusion for next action: <span id="kiInfusionLabel">0%</span></label>
+        <input id="kiInfusion" type="range" min="0" max="60" value="0" />
+        <div class="button-row" id="actions"></div>
+      </div>
+
+      <div class="log-wrap">
+        <h3>Combat Log</h3>
+        <ul id="combatLog"></ul>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="src/game.js"></script>
+</body>
+</html>

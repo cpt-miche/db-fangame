@@ -1,0 +1,31 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/battle/BattleUI.tscn" id="1"]
+[ext_resource type="Script" path="res://scripts/battle/battle_controller.gd" id="2"]
+[ext_resource type="Resource" path="res://resources/fighters/player_base.tres" id="3"]
+[ext_resource type="Resource" path="res://resources/fighters/raditz_scout.tres" id="4"]
+[ext_resource type="Resource" path="res://resources/transformations/kaioken.tres" id="5"]
+[ext_resource type="Resource" path="res://resources/attacks/strike.tres" id="6"]
+[ext_resource type="Resource" path="res://resources/attacks/ki_blast.tres" id="7"]
+[ext_resource type="Resource" path="res://resources/attacks/ki_volley.tres" id="8"]
+[ext_resource type="Resource" path="res://resources/attacks/ki_barrage.tres" id="9"]
+
+[node name="Battle" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BattleController" type="Node" parent="."]
+script = ExtResource("2")
+player_base = ExtResource("3")
+enemy_base = ExtResource("4")
+kaioken_def = ExtResource("5")
+strike_attack = ExtResource("6")
+ki_blast_attack = ExtResource("7")
+ki_volley_attack = ExtResource("8")
+ki_barrage_attack = ExtResource("9")
+
+[node name="BattleUI" parent="." instance=ExtResource("1")]

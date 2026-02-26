@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TransformationDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/transformation_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"kaioken"
+label = "Kaioken"
+required_hp = 40
+required_stamina = 35
+damage_multiplier = 1.28
+speed_bonus = 8
+drain_hp_per_turn = 8
+drain_stamina_per_turn = 14
+drain_drawn_ki_per_turn = 0
