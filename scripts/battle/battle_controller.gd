@@ -91,7 +91,7 @@ func _apply_end_round() -> void:
 	state.enemy.clamp_resources()
 
 func _power_up(fighter: FighterStats) -> void:
-	var amount := mini(45, fighter.stored_ki, fighter.max_drawn_ki - fighter.drawn_ki)
+	var amount := mini(45, mini(fighter.stored_ki, fighter.max_drawn_ki - fighter.drawn_ki))
 	if amount <= 0:
 		_log("%s cannot draw more ki." % fighter.fighter_name)
 		return
