@@ -20,9 +20,13 @@ extends Resource
 @export var speed: int = 46
 @export var control: int = 42
 
+@export_range(0, 5, 1) var base_form_override_level: int = 0
+
 var escalation: float = 0.0
 var guarding: bool = false
 var kaioken_active: bool = false
+var form_level: int = 0
+var highest_form_rewarded_this_rest: int = 0
 
 func duplicate_runtime() -> FighterStats:
 	var copy := FighterStats.new()
@@ -39,6 +43,9 @@ func duplicate_runtime() -> FighterStats:
 	copy.ki_strength = ki_strength
 	copy.speed = speed
 	copy.control = control
+	copy.base_form_override_level = base_form_override_level
+	copy.form_level = base_form_override_level
+	copy.highest_form_rewarded_this_rest = base_form_override_level
 	return copy
 
 func clamp_resources() -> void:

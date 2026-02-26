@@ -3,20 +3,22 @@ extends RefCounted
 
 const BASE_SUPPRESSION := 35.0
 
+const BASE_DR_MAX := 0.50
+const DR_CURVE_P := 0.75
+const DR_CAP := 0.90
+const SCRATCH_PCT_HP := 0.001
+
+const FORM_DR_BONUS := {
+	0: 0.00, # Base
+	1: 0.15, # SS1
+	2: 0.20, # SS2
+	3: 0.30, # SS3
+	4: 0.35, # SSGod
+	5: 0.40, # SSBlue
+}
+
 func get_suppression(fighter: FighterStats) -> float:
 	return clampf((BASE_SUPPRESSION - fighter.escalation) / 100.0, 0.0, 0.5)
-
-func get_mitigation(defender: FighterStats, attack_type: AttackDef.AttackType) -> float:
-	var stamina_pct := float(defender.stamina) / maxf(1.0, float(defender.max_stamina))
-	var drawn_ki_pct := float(defender.drawn_ki) / maxf(1.0, float(defender.max_drawn_ki))
-	var mix := 0.0
-	if attack_type == AttackDef.AttackType.PHYSICAL:
-		mix = 0.65 * stamina_pct + 0.35 * drawn_ki_pct
-	else:
-		mix = 0.65 * drawn_ki_pct + 0.35 * stamina_pct
-
-	var guard_bonus := 0.2 if defender.guarding else 0.0
-	return clampf(0.1 + mix * 0.55 + guard_bonus, 0.08, 0.88)
 
 func get_vanish_cost(attack_tier: int) -> int:
 	return 12 + attack_tier * 8
@@ -47,6 +49,21 @@ func try_vanish(attacker: FighterStats, defender: FighterStats, attack: AttackDe
 		"counter_damage": counter_damage,
 	}
 
+func compute_hp_damage(defender: FighterStats, raw_damage: float) -> int:
+	var stamina_ratio := clampf(float(defender.stamina) / maxf(1.0, float(defender.max_stamina)), 0.0, 1.0)
+	var form_bonus := float(FORM_DR_BONUS.get(defender.form_level, 0.0))
+	var dr_max := clampf(BASE_DR_MAX + form_bonus, 0.0, DR_CAP)
+	var stamina_dr := dr_max * pow(stamina_ratio, DR_CURVE_P)
+
+	var scratch_threshold := SCRATCH_PCT_HP * float(defender.max_hp)
+	var pre_mitigation := maxf(0.0, raw_damage - scratch_threshold)
+	var hp_damage := pre_mitigation * (1.0 - stamina_dr)
+
+	var final_scratch_floor := SCRATCH_PCT_HP * float(defender.max_hp)
+	if hp_damage < final_scratch_floor:
+		return 0
+	return maxi(1, int(round(hp_damage)))
+
 func resolve_attack(attacker: FighterStats, defender: FighterStats, attack: AttackDef, infusion_ratio: float, transformation: TransformationDef, rng: RandomNumberGenerator) -> Dictionary:
 	var infusion_cost := int(round(attacker.max_drawn_ki * infusion_ratio * attack.infusion_cap))
 	if attacker.stamina < attack.stamina_cost or attacker.drawn_ki < (attack.ki_cost + infusion_cost):
@@ -69,7 +86,7 @@ func resolve_attack(attacker: FighterStats, defender: FighterStats, attack: Atta
 	var stat_power := attacker.physical_strength if attack.attack_type == AttackDef.AttackType.PHYSICAL else attacker.ki_strength
 	var infusion_boost := 1.0 + infusion_ratio * 0.9
 	var raw_damage := (attack.base_damage + stat_power * attack.scaling) * suppression * trans_multiplier * infusion_boost
-	var final_damage := maxi(1, int(round(raw_damage * (1.0 - get_mitigation(defender, attack.attack_type)))))
+	var final_damage := compute_hp_damage(defender, raw_damage)
 
 	defender.hp -= final_damage
 	attacker.escalation += attack.escalation_gain

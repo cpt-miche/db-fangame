@@ -33,6 +33,9 @@ func _ready() -> void:
 	ui.infusion_changed.connect(func(v: float) -> void: infusion_ratio = v)
 	_refresh_view()
 
+func get_player_stat_lines() -> PackedStringArray:
+	return _fighter_stat_lines(state.player)
+
 func _on_action_pressed(action_id: StringName) -> void:
 	if state.is_finished():
 		return
@@ -55,8 +58,10 @@ func _match_player_action(action_id: StringName) -> void:
 			state.player.guarding = true
 			state.player.stamina += 8
 			_log("Player guards and steadies stance.")
-		&"transform":
+		&"kaioken":
 			_toggle_kaioken(state.player)
+		&"transform_form":
+			_transform_higher_form(state.player)
 		_:
 			if attacks.has(action_id):
 				var attack_result := resolver.resolve_attack(state.player, state.enemy, attacks[action_id], infusion_ratio, kaioken_def, rng)
@@ -72,8 +77,11 @@ func _resolve_enemy_turn() -> void:
 		state.enemy.guarding = true
 		_log("%s guards." % state.enemy.fighter_name)
 		return
-	if action == &"transform":
+	if action == &"kaioken":
 		_toggle_kaioken(state.enemy)
+		return
+	if action == &"transform_form":
+		_transform_higher_form(state.enemy)
 		return
 
 	var result := resolver.resolve_attack(state.enemy, state.player, attacks[action], 0.25, kaioken_def, rng)
@@ -99,6 +107,21 @@ func _power_up(fighter: FighterStats) -> void:
 	fighter.drawn_ki += amount
 	fighter.escalation += 5
 	_log("%s powers up (+%d drawn ki)." % [fighter.fighter_name, amount])
+
+func _transform_higher_form(fighter: FighterStats) -> void:
+	const MAX_FORM_LEVEL := 5
+	if fighter.form_level >= MAX_FORM_LEVEL:
+		_log("%s is already at maximum form." % fighter.fighter_name)
+		return
+	fighter.form_level += 1
+	var newly_rewarded_levels := maxi(0, fighter.form_level - fighter.highest_form_rewarded_this_rest)
+	if newly_rewarded_levels > 0:
+		var stamina_gain := int(round(float(fighter.max_stamina) * 0.25 * float(newly_rewarded_levels)))
+		fighter.stamina = mini(fighter.max_stamina, fighter.stamina + stamina_gain)
+		fighter.highest_form_rewarded_this_rest = fighter.form_level
+		_log("%s transforms to form %d and regains %d stamina." % [fighter.fighter_name, fighter.form_level, stamina_gain])
+		return
+	_log("%s transforms to form %d." % [fighter.fighter_name, fighter.form_level])
 
 func _toggle_kaioken(fighter: FighterStats) -> void:
 	if fighter.kaioken_active:
@@ -149,6 +172,24 @@ func _refresh_view() -> void:
 	$"../BattleUI/Margin/VBox/EnemyStats".text = _fighter_line(state.enemy)
 
 func _fighter_line(f: FighterStats) -> String:
-	return "%s HP %d/%d | Stam %d/%d | StoredKi %d/%d | DrawnKi %d/%d" % [
-		f.fighter_name, f.hp, f.max_hp, f.stamina, f.max_stamina, f.stored_ki, f.max_stored_ki, f.drawn_ki, f.max_drawn_ki
+	return "%s HP %d/%d | Stam %d/%d | StoredKi %d/%d | DrawnKi %d/%d | Form %d%s" % [
+		f.fighter_name, f.hp, f.max_hp, f.stamina, f.max_stamina, f.stored_ki, f.max_stored_ki, f.drawn_ki, f.max_drawn_ki, f.form_level,
+		" +Kaioken" if f.kaioken_active else ""
 	]
+
+func _fighter_stat_lines(f: FighterStats) -> PackedStringArray:
+	return PackedStringArray([
+		"Name: %s" % f.fighter_name,
+		"HP: %d / %d" % [f.hp, f.max_hp],
+		"Stamina: %d / %d" % [f.stamina, f.max_stamina],
+		"Stored Ki: %d / %d" % [f.stored_ki, f.max_stored_ki],
+		"Drawn Ki: %d / %d" % [f.drawn_ki, f.max_drawn_ki],
+		"Physical Strength: %d" % f.physical_strength,
+		"Ki Strength: %d" % f.ki_strength,
+		"Speed: %d" % f.speed,
+		"Control: %d" % f.control,
+		"Escalation: %d" % int(f.escalation),
+		"Form Level: %d" % f.form_level,
+		"Base Form Override: %d" % f.base_form_override_level,
+		"Kaioken Active: %s" % ("Yes" if f.kaioken_active else "No"),
+	])

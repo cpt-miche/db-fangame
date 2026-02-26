@@ -12,8 +12,10 @@ func choose_action(enemy: FighterStats, attacks: Dictionary) -> StringName:
 		return &"power_up"
 	if low_stamina:
 		return &"guard"
+	if enemy.form_level < 2 and enemy.stamina > 70:
+		return &"transform_form"
 	if not enemy.kaioken_active and enemy.hp < 220 and enemy.stamina > 60:
-		return &"transform"
+		return &"kaioken"
 
 	var roll := randf()
 	if roll < 0.35 and attacks.has(&"strike") and _can_use_attack(enemy, attacks[&"strike"]):
