@@ -13,6 +13,7 @@ func _ready() -> void:
 			npc.body_exited.connect(_on_enemy_body_exited)
 
 func _on_enemy_interacted(enemy_id: StringName) -> void:
+	prompt_label.visible = false
 	emit_signal("encounter_requested", enemy_id)
 
 func _on_enemy_body_entered(body: Node) -> void:

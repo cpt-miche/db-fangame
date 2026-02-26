@@ -14,7 +14,11 @@ func _ready() -> void:
 	_on_infusion_changed(infusion_slider.value)
 
 func append_log(line: String) -> void:
-	combat_log.text = "%s\n%s" % [line, combat_log.text]
+	if combat_log.text.is_empty() or combat_log.text == "Combat log...":
+		combat_log.text = line
+	else:
+		combat_log.text = "%s\n%s" % [combat_log.text, line]
+	combat_log.scroll_to_line(maxi(combat_log.get_line_count() - 1, 0))
 
 func _on_infusion_changed(value: float) -> void:
 	infusion_label.text = "%d%%" % int(value)
