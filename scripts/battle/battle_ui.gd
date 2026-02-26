@@ -3,7 +3,7 @@ extends Control
 signal action_pressed(action_id: StringName)
 signal infusion_changed(value: float)
 
-@onready var log: RichTextLabel = $Margin/VBox/Log
+@onready var combat_log: RichTextLabel = $Margin/VBox/Log
 @onready var infusion_slider: HSlider = $Margin/VBox/InfusionRow/InfusionSlider
 @onready var infusion_label: Label = $Margin/VBox/InfusionRow/InfusionValue
 
@@ -14,7 +14,7 @@ func _ready() -> void:
 	_on_infusion_changed(infusion_slider.value)
 
 func append_log(line: String) -> void:
-	log.text = "%s\n%s" % [line, log.text]
+	combat_log.text = "%s\n%s" % [line, combat_log.text]
 
 func _on_infusion_changed(value: float) -> void:
 	infusion_label.text = "%d%%" % int(value)
