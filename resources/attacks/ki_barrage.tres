@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AttackDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/attack_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"ki_barrage"
+label = "Ki Blast Barrage"
+attack_type = 1
+base_damage = 50.0
+scaling = 0.95
+stamina_cost = 12
+ki_cost = 70
+infusion_cap = 0.55
+base_hit = 0.92
+can_vanish = true
+attack_tier = 3
+escalation_gain = 13.0

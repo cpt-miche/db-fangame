@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="FighterStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/fighter_stats.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+fighter_name = "Player"
+max_hp = 450
+hp = 450
+max_stamina = 240
+stamina = 240
+max_stored_ki = 360
+stored_ki = 360
+max_drawn_ki = 240
+drawn_ki = 80
+physical_strength = 56
+ki_strength = 50
+speed = 46
+control = 42

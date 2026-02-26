@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AttackDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/attack_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"strike"
+label = "Physical Strike"
+attack_type = 0
+base_damage = 28.0
+scaling = 1.15
+stamina_cost = 18
+ki_cost = 0
+infusion_cap = 0.2
+base_hit = 0.78
+can_vanish = true
+attack_tier = 1
+escalation_gain = 7.0
