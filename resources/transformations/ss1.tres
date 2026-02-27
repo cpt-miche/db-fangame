@@ -18,3 +18,4 @@ speed_multiplier = 2.0
 max_stamina_multiplier = 2.0
 stored_ki_upkeep_pct = 0.01
 stored_to_drawn_pct = 0.01
+incompatible_transformation_ids = PackedStringArray("kaioken")

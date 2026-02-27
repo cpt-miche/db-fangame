@@ -25,6 +25,10 @@ extends Resource
 @export var drawn_ki_upkeep_pct: float = 0.0
 @export var stored_to_drawn_pct: float = 0.0
 
+# List of transformation ids that cannot coexist with this transformation.
+# Used to auto-clear incompatible active buffs when this transformation activates.
+@export var incompatible_transformation_ids: PackedStringArray = PackedStringArray([])
+
 func can_activate(fighter: FighterStats) -> bool:
 	var required_hp := int(ceil(float(fighter.max_hp) * required_hp_pct))
 	var required_stamina := int(ceil(float(fighter.max_stamina) * required_stamina_pct))
