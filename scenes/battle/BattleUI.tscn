@@ -96,3 +96,29 @@ fit_content = false
 scroll_active = true
 bbcode_enabled = false
 text = "Combat log..."
+
+[node name="DebugPanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -340.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 280.0
+grow_horizontal = 0
+
+[node name="Margin" type="MarginContainer" parent="DebugPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="Stats" type="RichTextLabel" parent="DebugPanel/Margin"]
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+text = ""
