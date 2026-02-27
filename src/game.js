@@ -13,7 +13,6 @@ const keys = new Set();
 let mode = 'explore';
 
 const playerWorld = { x: 140, y: 270, w: 34, h: 64, speed: 4 };
-const enemyWorld = { x: 740, y: 270, w: 34, h: 64, name: 'Raditz (Scout)', tag: 'RADITZ' };
 
 const enemyRoster = [
   {
@@ -94,9 +93,13 @@ const enemyRoster = [
   }
 ];
 
-function chooseEnemyProfile() {
-  return enemyRoster[Math.floor(Math.random() * enemyRoster.length)];
-}
+const enemyWorlds = enemyRoster.map((enemy, index) => ({
+  ...enemy,
+  x: 460 + index * 110,
+  y: 270,
+  w: 34,
+  h: 64
+}));
 
 const actions = [
   { key: 'strike', label: 'Physical Strike' },
@@ -154,11 +157,8 @@ function setupActionButtons() {
   });
 }
 
-function startBattle() {
+function startBattle(enemyProfile) {
   mode = 'battle';
-  const enemyProfile = chooseEnemyProfile();
-  enemyWorld.name = enemyProfile.name;
-  enemyWorld.tag = enemyProfile.tag;
   battle = {
     player: makeFighter('Player', true),
     enemy: { ...makeFighter(enemyProfile.name), ...enemyProfile },
@@ -486,20 +486,25 @@ function drawWorld() {
   ctx.fillRect(0, 310, canvas.width, 50);
 
   drawCharacter(playerWorld, '#4db2ff', 'YOU');
-  drawCharacter(enemyWorld, '#ff7e54', enemyWorld.tag);
+  enemyWorlds.forEach((enemy) => drawCharacter(enemy, '#ff7e54', enemy.tag, enemy.name));
 
   if (mode === 'explore') {
-    const near = Math.abs(playerWorld.x - enemyWorld.x) < 55;
-    worldHint.textContent = near ? 'Press E to talk/fight.' : 'Move with A/D or ←/→.';
-    if (near && keys.has('e')) startBattle();
+    const nearbyEnemy = enemyWorlds.find((enemy) => Math.abs(playerWorld.x - enemy.x) < 55);
+    worldHint.textContent = nearbyEnemy
+      ? `Press E to challenge ${nearbyEnemy.name}.`
+      : 'Move with A/D or ←/→.';
+    if (nearbyEnemy && keys.has('e')) startBattle(nearbyEnemy);
   }
 }
 
-function drawCharacter(ch, color, label) {
+function drawCharacter(ch, color, label, name = '') {
   ctx.fillStyle = color;
   ctx.fillRect(ch.x - ch.w / 2, ch.y - ch.h, ch.w, ch.h);
   ctx.fillStyle = '#fff';
   ctx.font = '12px sans-serif';
+  if (name) {
+    ctx.fillText(name, ch.x - ch.w / 2 - 10, ch.y - ch.h - 22);
+  }
   ctx.fillText(label, ch.x - ch.w / 2 - 4, ch.y - ch.h - 8);
 }
 
