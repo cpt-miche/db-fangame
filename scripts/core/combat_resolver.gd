@@ -8,6 +8,13 @@ const DR_CURVE_P := 0.75
 const DR_CAP := 0.90
 const SCRATCH_PCT_HP := 0.001
 
+const HIT_CHANCE_MIN := 0.30
+const HIT_CHANCE_BASE := 0.90
+const HIT_CHANCE_MAX := 0.99
+const HIT_CHANCE_LOW_EXP := 1.0
+const HIT_CHANCE_HIGH_EXP := 1.0
+const LOG2 := log(2.0)
+
 const FORM_DR_BONUS := {
 	0: 0.00, # Base
 	1: 0.15, # SS1
@@ -22,6 +29,26 @@ func get_suppression(fighter: FighterStats) -> float:
 
 func get_vanish_cost(attack_tier: int) -> int:
 	return 12 + attack_tier * 8
+
+func get_hit_chance_from_speed(attacker_speed: int, defender_speed: int, low_exp: float = HIT_CHANCE_LOW_EXP, high_exp: float = HIT_CHANCE_HIGH_EXP) -> float:
+	var safe_attacker_speed := maxf(float(attacker_speed), 1.0)
+	var safe_defender_speed := maxf(float(defender_speed), 1.0)
+	var speed_ratio := safe_attacker_speed / safe_defender_speed
+	var x := log(speed_ratio) / LOG2
+
+	if x <= -1.0:
+		return HIT_CHANCE_MIN
+	if x >= 1.0:
+		return HIT_CHANCE_MAX
+
+	if x < 0.0:
+		var slower_progress := x + 1.0
+		var slower_curve := pow(slower_progress, low_exp)
+		return lerpf(HIT_CHANCE_MIN, HIT_CHANCE_BASE, slower_curve)
+
+	var faster_progress := x
+	var faster_curve := pow(faster_progress, high_exp)
+	return lerpf(HIT_CHANCE_BASE, HIT_CHANCE_MAX, faster_curve)
 
 func try_vanish(attacker: FighterStats, defender: FighterStats, attack: AttackDef, rng: RandomNumberGenerator) -> Dictionary:
 	var vanish_cost := get_vanish_cost(attack.attack_tier)
@@ -72,7 +99,8 @@ func resolve_attack(attacker: FighterStats, defender: FighterStats, attack: Atta
 	attacker.stamina -= attack.stamina_cost
 	attacker.drawn_ki -= attack.ki_cost + infusion_cost
 
-	var hit_chance := clampf(attack.base_hit + (attacker.speed - defender.speed) * 0.006 + infusion_ratio * 0.08 - (0.14 if defender.guarding else 0.0), 0.1, 0.95)
+	var hit_chance := get_hit_chance_from_speed(attacker.speed, defender.speed)
+	hit_chance = clampf(hit_chance + infusion_ratio * 0.08 - (0.14 if defender.guarding else 0.0), HIT_CHANCE_MIN, HIT_CHANCE_MAX)
 	if rng.randf() > hit_chance:
 		return {"ok": true, "result": "miss"}
 
