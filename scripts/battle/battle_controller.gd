@@ -11,7 +11,7 @@ signal battle_finished(result: String)
 @export var ki_volley_attack: AttackDef
 @export var ki_barrage_attack: AttackDef
 
-@onready var ui: Control = $"../BattleUI"
+@onready var ui = $"../BattleUI"
 
 const MAX_FORM_LEVEL := 5
 const FORM_STRENGTH_MULT := {0: 1.0, 1: 5.0}
@@ -41,6 +41,7 @@ func _ready() -> void:
 	_apply_form_scaling(state.enemy, true)
 	ui.action_pressed.connect(_on_action_pressed)
 	ui.infusion_changed.connect(func(v: float) -> void: infusion_ratio = v)
+	ui.debug_mode_toggled.connect(_on_debug_mode_toggled)
 	_refresh_view()
 
 func get_player_stat_lines() -> PackedStringArray:
@@ -140,6 +141,9 @@ func _toggle_kaioken(fighter: FighterStats) -> void:
 		fighter.kaioken_active = false
 		_log("%s deactivates Kaioken." % fighter.fighter_name)
 		return
+	if fighter.form_level > 0:
+		_log("%s can only use Kaioken in base form." % fighter.fighter_name)
+		return
 	if fighter.hp < kaioken_def.required_hp or fighter.stamina < kaioken_def.required_stamina:
 		_log("%s lacks HP/Stamina for Kaioken." % fighter.fighter_name)
 		return
@@ -221,6 +225,7 @@ func _refresh_view() -> void:
 	$"../BattleUI/Margin/VBox/Status".text = "Turn %d | Escalation P:%d E:%d" % [state.turn, int(state.player.escalation), int(state.enemy.escalation)]
 	$"../BattleUI/Margin/VBox/PlayerStats".text = _fighter_line(state.player)
 	$"../BattleUI/Margin/VBox/EnemyStats".text = _fighter_line(state.enemy)
+	_refresh_debug_overlay()
 
 func _fighter_line(f: FighterStats) -> String:
 	return "%s HP %d/%d | Stam %d/%d | StoredKi %d/%d | DrawnKi %d/%d | Form %d%s" % [
@@ -244,4 +249,35 @@ func _fighter_stat_lines(f: FighterStats) -> PackedStringArray:
 		"Base Form Override: %d" % f.base_form_override_level,
 		"Form Mastery: %d" % f.form_mastery_level,
 		"Kaioken Active: %s" % ("Yes" if f.kaioken_active else "No"),
+	])
+
+
+func _on_debug_mode_toggled(enabled: bool) -> void:
+	if enabled:
+		_refresh_debug_overlay()
+
+func _refresh_debug_overlay() -> void:
+	if not ui.debug_mode_enabled:
+		return
+	var lines := PackedStringArray()
+	lines.append("[b]Player Stats[/b]")
+	for line in _fighter_debug_lines(state.player):
+		lines.append(line)
+	lines.append("")
+	lines.append("[b]Enemy Stats[/b]")
+	for line in _fighter_debug_lines(state.enemy):
+		lines.append(line)
+	ui.set_debug_stats(lines)
+
+func _fighter_debug_lines(f: FighterStats) -> PackedStringArray:
+	return PackedStringArray([
+		"Name: %s" % f.fighter_name,
+		"HP: %d / %d" % [f.hp, f.max_hp],
+		"Stamina: %d / %d" % [f.stamina, f.max_stamina],
+		"Stored Ki: %d / %d" % [f.stored_ki, f.max_stored_ki],
+		"Drawn Ki: %d / %d" % [f.drawn_ki, f.max_drawn_ki],
+		"Physical: %d (base %d)" % [f.physical_strength, f.base_physical_strength],
+		"Ki: %d (base %d)" % [f.ki_strength, f.base_ki_strength],
+		"Speed: %d (base %d)" % [f.speed, f.base_speed],
+		"Form: %d | Kaioken: %s" % [f.form_level, "On" if f.kaioken_active else "Off"],
 	])

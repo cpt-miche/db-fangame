@@ -14,7 +14,7 @@ func choose_action(enemy: FighterStats, attacks: Dictionary) -> StringName:
 		return &"guard"
 	if enemy.form_level < 2 and enemy.stamina > 70:
 		return &"transform_form"
-	if not enemy.kaioken_active and enemy.hp < 220 and enemy.stamina > 60:
+	if enemy.form_level == 0 and not enemy.kaioken_active and enemy.hp < 220 and enemy.stamina > 60:
 		return &"kaioken"
 
 	var roll := randf()
