@@ -166,6 +166,7 @@ func _toggle_kaioken(fighter: FighterStats) -> void:
 		return
 	if fighter.kaioken_active:
 		fighter.kaioken_active = false
+		_apply_form_scaling(fighter, false)
 		_log("%s deactivates Kaioken." % fighter.fighter_name)
 		return
 	if fighter.form_level > 0:
@@ -179,6 +180,7 @@ func _toggle_kaioken(fighter: FighterStats) -> void:
 		_log("%s lacks activation requirements for Kaioken." % fighter.fighter_name)
 		return
 	fighter.kaioken_active = true
+	_apply_form_scaling(fighter, false)
 	fighter.escalation += 12
 	_log("%s activates Kaioken!" % fighter.fighter_name)
 
@@ -220,6 +222,7 @@ func _apply_form_upkeep(fighter: FighterStats) -> void:
 func _apply_form_scaling(fighter: FighterStats, preserve_stamina_ratio: bool) -> void:
 	var stamina_ratio := float(fighter.stamina) / maxf(1.0, float(fighter.max_stamina))
 	var active_form := _get_active_form_transformation(fighter)
+	var kaioken := _get_kaioken_transformation(fighter)
 	var physical_mult := 1.0
 	var ki_mult := 1.0
 	var speed_mult := 1.0
@@ -229,6 +232,11 @@ func _apply_form_scaling(fighter: FighterStats, preserve_stamina_ratio: bool) ->
 		ki_mult = active_form.strength_multiplier
 		speed_mult = active_form.speed_multiplier
 		stamina_mult = active_form.max_stamina_multiplier
+	if kaioken:
+		physical_mult *= kaioken.strength_multiplier
+		ki_mult *= kaioken.strength_multiplier
+		speed_mult *= kaioken.speed_multiplier
+		stamina_mult *= kaioken.max_stamina_multiplier
 
 	fighter.physical_strength = int(round(float(fighter.base_physical_strength) * physical_mult))
 	fighter.ki_strength = int(round(float(fighter.base_ki_strength) * ki_mult))

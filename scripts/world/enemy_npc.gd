@@ -1,10 +1,14 @@
 extends Area2D
 
 @export var enemy_id: StringName = &"raditz_scout"
+@export var display_name: String = "Enemy"
+
+@onready var name_label: Label = $NameLabel
 
 signal player_interacted(enemy_id: StringName)
 
 func _ready() -> void:
+	name_label.text = display_name
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 
