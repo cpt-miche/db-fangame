@@ -99,7 +99,9 @@ func resolve_attack(attacker: FighterStats, defender: FighterStats, attack: Atta
 	attacker.stamina -= attack.stamina_cost
 	attacker.drawn_ki -= attack.ki_cost + infusion_cost
 
-	var hit_chance := get_hit_chance_from_speed(attacker.speed, defender.speed)
+	var speed_hit_chance := get_hit_chance_from_speed(attacker.speed, defender.speed)
+	var speed_hit_delta := speed_hit_chance - HIT_CHANCE_BASE
+	var hit_chance := attack.base_hit + speed_hit_delta
 	hit_chance = clampf(hit_chance + infusion_ratio * 0.08 - (0.14 if defender.guarding else 0.0), HIT_CHANCE_MIN, HIT_CHANCE_MAX)
 	if rng.randf() > hit_chance:
 		return {"ok": true, "result": "miss"}
