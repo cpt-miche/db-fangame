@@ -19,4 +19,4 @@ speed = 76
 control = 70
 attack_skill_ids = PackedStringArray("strike", "ki_blast", "ki_volley", "ki_barrage")
 utility_skill_ids = PackedStringArray("power_up", "guard", "transform_form")
-transformation_skill_ids = PackedStringArray("frieza_second_form")
+transformation_skill_ids = PackedStringArray()
