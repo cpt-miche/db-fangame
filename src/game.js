@@ -13,7 +13,90 @@ const keys = new Set();
 let mode = 'explore';
 
 const playerWorld = { x: 140, y: 270, w: 34, h: 64, speed: 4 };
-const enemyWorld = { x: 740, y: 270, w: 34, h: 64, name: 'Raditz (Scout)' };
+const enemyWorld = { x: 740, y: 270, w: 34, h: 64, name: 'Raditz (Scout)', tag: 'RADITZ' };
+
+const enemyRoster = [
+  {
+    name: 'Martial Artist',
+    tag: 'MARTIAL',
+    maxHp: 320,
+    hp: 320,
+    maxStamina: 220,
+    stamina: 220,
+    maxStoredKi: 0,
+    storedKi: 0,
+    maxDrawnKi: 0,
+    drawnKi: 0,
+    physical: 38,
+    ki: 0,
+    speed: 34,
+    control: 0,
+    canUseKi: false,
+    canKaioken: false,
+    strengthLabel: 'Very Weak'
+  },
+  {
+    name: 'Saibaman',
+    tag: 'SAIBAMAN',
+    maxHp: 390,
+    hp: 390,
+    maxStamina: 230,
+    stamina: 230,
+    maxStoredKi: 160,
+    storedKi: 160,
+    maxDrawnKi: 140,
+    drawnKi: 70,
+    physical: 48,
+    ki: 36,
+    speed: 39,
+    control: 28,
+    canUseKi: true,
+    canKaioken: false,
+    strengthLabel: 'Weak'
+  },
+  {
+    name: 'Raditz (Scout)',
+    tag: 'RADITZ',
+    maxHp: 450,
+    hp: 450,
+    maxStamina: 240,
+    stamina: 240,
+    maxStoredKi: 360,
+    storedKi: 360,
+    maxDrawnKi: 240,
+    drawnKi: 90,
+    physical: 52,
+    ki: 48,
+    speed: 40,
+    control: 36,
+    canUseKi: true,
+    canKaioken: true,
+    strengthLabel: 'Medium'
+  },
+  {
+    name: 'Freiza',
+    tag: 'FREIZA',
+    maxHp: 740,
+    hp: 740,
+    maxStamina: 360,
+    stamina: 360,
+    maxStoredKi: 620,
+    storedKi: 620,
+    maxDrawnKi: 420,
+    drawnKi: 220,
+    physical: 86,
+    ki: 94,
+    speed: 76,
+    control: 70,
+    canUseKi: true,
+    canKaioken: false,
+    strengthLabel: 'Very Strong'
+  }
+];
+
+function chooseEnemyProfile() {
+  return enemyRoster[Math.floor(Math.random() * enemyRoster.length)];
+}
 
 const actions = [
   { key: 'strike', label: 'Physical Strike' },
@@ -72,21 +155,19 @@ function setupActionButtons() {
 
 function startBattle() {
   mode = 'battle';
+  const enemyProfile = chooseEnemyProfile();
+  enemyWorld.name = enemyProfile.name;
+  enemyWorld.tag = enemyProfile.tag;
   battle = {
     player: makeFighter('Player', true),
-    enemy: makeFighter(enemyWorld.name),
+    enemy: { ...makeFighter(enemyProfile.name), ...enemyProfile },
     turn: 1,
     suppressionBase: 35,
     winner: null
   };
-  battle.enemy.physical = 52;
-  battle.enemy.ki = 48;
-  battle.enemy.speed = 40;
-  battle.enemy.drawnKi = 90;
-  battle.enemy.control = 36;
   controls.classList.remove('hidden');
   kiInfusion.value = '0';
-  addLog('Fight starts cautiously. Both fighters are holding back.');
+  addLog(`Encountered ${enemyProfile.name} (${enemyProfile.strengthLabel}). Fight starts cautiously.`);
   renderBattle();
 }
 
@@ -265,7 +346,7 @@ function enemyTurn() {
   const lowKi = e.drawnKi < 30;
   const lowStam = e.stamina < 25;
 
-  if (lowKi && e.storedKi > 20 && Math.random() < 0.8) {
+  if (e.canUseKi && lowKi && e.storedKi > 20 && Math.random() < 0.8) {
     const gain = Math.min(40, e.storedKi, e.maxDrawnKi - e.drawnKi);
     e.storedKi -= gain;
     e.drawnKi += gain;
@@ -273,7 +354,7 @@ function enemyTurn() {
     return;
   }
 
-  if (!e.kaioken && e.hp < 220 && e.stamina > 60 && Math.random() < 0.35) {
+  if (e.canKaioken && !e.kaioken && e.hp < 220 && e.stamina > 60 && Math.random() < 0.35) {
     e.kaioken = true;
     e.escalation += 10;
     addLog(`${e.name} flares into Kaioken!`);
@@ -287,6 +368,15 @@ function enemyTurn() {
   }
 
   const roll = Math.random();
+  if (!e.canUseKi || e.maxDrawnKi === 0) {
+    applyAttack(e, p, {
+      label: 'Martial Rush', type: 'physical', base: 21, scaling: 0.95,
+      baseHit: 0.79, staminaCost: 12, kiCost: 0, infusionCap: 0,
+      canVanish: false, tier: 0, escalationGain: 4
+    });
+    return;
+  }
+
   if (roll < 0.35) {
     applyAttack(e, p, {
       label: 'Wild Strike', type: 'physical', base: 25, scaling: 1.06,
@@ -362,7 +452,7 @@ function drawWorld() {
   ctx.fillRect(0, 310, canvas.width, 50);
 
   drawCharacter(playerWorld, '#4db2ff', 'YOU');
-  drawCharacter(enemyWorld, '#ff7e54', 'RADITZ');
+  drawCharacter(enemyWorld, '#ff7e54', enemyWorld.tag);
 
   if (mode === 'explore') {
     const near = Math.abs(playerWorld.x - enemyWorld.x) < 55;
