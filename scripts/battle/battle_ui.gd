@@ -43,6 +43,9 @@ func append_log(line: String) -> void:
 		combat_log.text = "%s\n%s" % [combat_log.text, line]
 	combat_log.scroll_to_line(maxi(combat_log.get_line_count() - 1, 0))
 
+func clear_log() -> void:
+	combat_log.text = ""
+
 func _on_infusion_changed(value: float) -> void:
 	infusion_label.text = "%d%%" % int(value)
 	infusion_changed.emit(value / 100.0)

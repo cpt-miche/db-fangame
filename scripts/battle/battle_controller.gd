@@ -37,6 +37,7 @@ func start_battle(enemy: FighterStats) -> void:
 	_apply_form_scaling(state.player, true)
 	_apply_form_scaling(state.enemy, true)
 	pending_result = ""
+	ui.clear_log()
 	ui.set_battle_active(true)
 	ui.set_exit_message("Exit battle")
 	_refresh_view()
@@ -60,7 +61,10 @@ func _on_action_pressed(action_id: StringName) -> void:
 		return
 
 	state.player.guarding = false
-	_match_player_action(action_id)
+	var action_consumed := _match_player_action(action_id)
+	if not action_consumed:
+		_refresh_view()
+		return
 	if _check_end():
 		return
 
@@ -69,40 +73,44 @@ func _on_action_pressed(action_id: StringName) -> void:
 	_check_end()
 	_refresh_view()
 
-func _match_player_action(action_id: StringName) -> void:
-	_process_action(state.player, state.enemy, action_id, infusion_ratio)
+func _match_player_action(action_id: StringName) -> bool:
+	return _process_action(state.player, state.enemy, action_id, infusion_ratio)
 
 func _resolve_enemy_turn() -> void:
 	state.enemy.guarding = false
 	var action := enemy_ai.choose_action(state.enemy, attacks, transformations)
 	_process_action(state.enemy, state.player, action, 0.25)
 
-func _process_action(actor: FighterStats, target: FighterStats, action_id: StringName, action_infusion: float) -> void:
+func _process_action(actor: FighterStats, target: FighterStats, action_id: StringName, action_infusion: float) -> bool:
 	match action_id:
 		&"power_up":
 			_power_up(actor)
+			return true
 		&"guard":
 			if not actor.has_utility_skill(&"guard"):
 				_log("%s cannot guard." % actor.fighter_name)
-				return
+				return true
 			actor.guarding = true
 			actor.stamina += 8
 			_log("%s guards and steadies stance." % actor.fighter_name)
+			return true
 		&"kaioken":
-			_toggle_kaioken(actor)
+			return _toggle_kaioken(actor)
 		&"transform_form":
 			_transform_higher_form(actor)
+			return true
 		_:
 			if not attacks.has(action_id) or not actor.has_attack_skill(action_id):
 				_log("%s cannot use %s." % [actor.fighter_name, String(action_id)])
-				return
+				return true
 			var selected_attack: AttackDef = attacks[action_id]
 			if not _can_use_attack_with_active_buffs(actor, selected_attack):
 				_log("%s cannot use %s without required transformation." % [actor.fighter_name, selected_attack.label])
-				return
+				return true
 			var active_boost := _get_kaioken_transformation(actor)
 			var attack_result := resolver.resolve_attack(actor, target, selected_attack, action_infusion, active_boost, rng)
 			_log_attack_result(actor.fighter_name, selected_attack, attack_result)
+			return true
 
 func _apply_end_round() -> void:
 	state.turn += 1
@@ -160,27 +168,28 @@ func _transform_higher_form(fighter: FighterStats) -> void:
 		fighter.max_stamina,
 	])
 
-func _toggle_kaioken(fighter: FighterStats) -> void:
+func _toggle_kaioken(fighter: FighterStats) -> bool:
 	if not fighter.has_utility_skill(&"kaioken") or not fighter.has_transformation_skill(&"kaioken"):
 		_log("%s cannot use Kaioken." % fighter.fighter_name)
-		return
+		return true
 	if fighter.kaioken_active:
 		fighter.kaioken_active = false
 		_log("%s deactivates Kaioken." % fighter.fighter_name)
-		return
+		return true
 	if fighter.form_level > 0:
 		_log("%s can only use Kaioken in base form." % fighter.fighter_name)
-		return
+		return false
 	var kaioken: TransformationDef = transformations.get(&"kaioken", null)
 	if kaioken == null:
 		_log("Kaioken transformation is not configured.")
-		return
+		return true
 	if not kaioken.can_activate(fighter):
 		_log("%s lacks activation requirements for Kaioken." % fighter.fighter_name)
-		return
+		return true
 	fighter.kaioken_active = true
 	fighter.escalation += 12
 	_log("%s activates Kaioken!" % fighter.fighter_name)
+	return true
 
 func _apply_kaioken_upkeep(fighter: FighterStats) -> void:
 	if not fighter.kaioken_active:
