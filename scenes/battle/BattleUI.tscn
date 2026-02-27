@@ -89,6 +89,21 @@ text = "Transform Up"
 layout_mode = 2
 text = "Kaioken"
 
+[node name="ExitBox" type="PanelContainer" parent="Margin/VBox"]
+visible = false
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Margin/VBox/ExitBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="ExitBattleButton" type="Button" parent="Margin/VBox/ExitBox/Margin"]
+layout_mode = 2
+text = "Enemy defeated. Exit battle"
+
 [node name="Log" type="RichTextLabel" parent="Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3

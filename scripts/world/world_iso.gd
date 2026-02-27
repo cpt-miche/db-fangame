@@ -23,3 +23,9 @@ func _on_enemy_body_entered(body: Node) -> void:
 func _on_enemy_body_exited(body: Node) -> void:
 	if body.is_in_group("player"):
 		prompt_label.visible = false
+
+func mark_enemy_defeated(enemy_id: StringName) -> void:
+	for npc: Node in $Enemies.get_children():
+		if npc.get("enemy_id") == enemy_id:
+			npc.queue_free()
+			break

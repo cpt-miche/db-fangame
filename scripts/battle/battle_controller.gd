@@ -18,16 +18,25 @@ var infusion_ratio: float = 0.0
 
 var attacks: Dictionary = {}
 var transformations: Dictionary = {}
+var pending_result: String = ""
 
 func _ready() -> void:
 	rng.randomize()
 	_initialize_skill_pools()
-	state.setup(player_base, enemy_base)
-	_apply_form_scaling(state.player, true)
-	_apply_form_scaling(state.enemy, true)
 	ui.action_pressed.connect(_on_action_pressed)
 	ui.infusion_changed.connect(func(v: float) -> void: infusion_ratio = v)
 	ui.debug_mode_toggled.connect(_on_debug_mode_toggled)
+	ui.exit_requested.connect(_on_exit_requested)
+	start_battle(enemy_base)
+
+func start_battle(enemy: FighterStats) -> void:
+	enemy_base = enemy
+	state.setup(player_base, enemy_base)
+	_apply_form_scaling(state.player, true)
+	_apply_form_scaling(state.enemy, true)
+	pending_result = ""
+	ui.set_battle_active(true)
+	ui.set_exit_message("Exit battle")
 	_refresh_view()
 
 func _initialize_skill_pools() -> void:
@@ -274,9 +283,24 @@ func _check_end() -> bool:
 	if not state.is_finished():
 		return false
 	var result := state.winner()
-	_log("Battle result: %s" % result)
-	battle_finished.emit(result)
+	pending_result = result
+	if result == "player":
+		_log("%s defeated" % state.enemy.fighter_name)
+		ui.set_exit_message("%s defeated - Exit battle" % state.enemy.fighter_name)
+	elif result == "enemy":
+		_log("%s defeated" % state.player.fighter_name)
+		ui.set_exit_message("%s defeated - Exit battle" % state.player.fighter_name)
+	else:
+		_log("Battle result: %s" % result)
+		ui.set_exit_message("Draw - Exit battle")
+	ui.set_battle_active(false)
+	_refresh_view()
 	return true
+
+func _on_exit_requested() -> void:
+	if pending_result == "":
+		return
+	battle_finished.emit(pending_result)
 
 func _log(line: String) -> void:
 	ui.append_log(line)

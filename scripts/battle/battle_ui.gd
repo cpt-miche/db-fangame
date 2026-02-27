@@ -3,12 +3,15 @@ extends Control
 signal action_pressed(action_id: StringName)
 signal infusion_changed(value: float)
 signal debug_mode_toggled(enabled: bool)
+signal exit_requested
 
 @onready var combat_log: RichTextLabel = $Margin/VBox/Log
 @onready var infusion_slider: HSlider = $Margin/VBox/InfusionRow/InfusionSlider
 @onready var infusion_label: Label = $Margin/VBox/InfusionRow/InfusionValue
 @onready var debug_panel: PanelContainer = $DebugPanel
 @onready var debug_label: RichTextLabel = $DebugPanel/Margin/Stats
+@onready var exit_box: PanelContainer = $Margin/VBox/ExitBox
+@onready var exit_button: Button = $Margin/VBox/ExitBox/ExitBattleButton
 
 var debug_mode_enabled := false
 
@@ -16,7 +19,9 @@ func _ready() -> void:
 	infusion_slider.value_changed.connect(_on_infusion_changed)
 	for button: Button in $Margin/VBox/Actions.get_children():
 		button.pressed.connect(func() -> void: action_pressed.emit(StringName(button.name)))
+	exit_button.pressed.connect(func() -> void: exit_requested.emit())
 	debug_panel.visible = false
+	exit_box.visible = false
 	_on_infusion_changed(infusion_slider.value)
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -41,3 +46,12 @@ func _on_infusion_changed(value: float) -> void:
 
 func set_debug_stats(lines: PackedStringArray) -> void:
 	debug_label.text = "\n".join(lines)
+
+func set_battle_active(is_active: bool) -> void:
+	for button: Button in $Margin/VBox/Actions.get_children():
+		button.disabled = not is_active
+	infusion_slider.editable = is_active
+	exit_box.visible = not is_active
+
+func set_exit_message(message: String) -> void:
+	exit_button.text = message
