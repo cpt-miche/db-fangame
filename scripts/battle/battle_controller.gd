@@ -27,6 +27,8 @@ func _ready() -> void:
 	ui.infusion_changed.connect(func(v: float) -> void: infusion_ratio = v)
 	ui.debug_mode_toggled.connect(_on_debug_mode_toggled)
 	ui.exit_requested.connect(_on_exit_requested)
+	if not ui.is_node_ready():
+		await ui.ready
 	start_battle(enemy_base)
 
 func start_battle(enemy: FighterStats) -> void:
