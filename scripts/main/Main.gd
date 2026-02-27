@@ -15,6 +15,8 @@ var enemy_map := {
 	&"frieza_force": preload("res://resources/fighters/frieza_force.tres"),
 }
 
+var active_enemy_id: StringName = &""
+
 func _ready() -> void:
 	world.encounter_requested.connect(_on_encounter_requested)
 	battle_controller.battle_finished.connect(_on_battle_finished)
@@ -73,15 +75,19 @@ func _on_encounter_requested(enemy_id: StringName) -> void:
 	if not enemy_map.has(enemy_id):
 		push_warning("Unknown enemy id: %s" % enemy_id)
 		return
-	battle_controller.enemy_base = enemy_map[enemy_id]
+	active_enemy_id = enemy_id
+	battle_controller.start_battle(enemy_map[enemy_id])
 	world.visible = false
 	battle.visible = true
 	battle.process_mode = Node.PROCESS_MODE_INHERIT
 	if stat_screen.visible:
 		_refresh_stat_screen()
 
-func _on_battle_finished(_result: String) -> void:
+func _on_battle_finished(result: String) -> void:
 	battle.visible = false
 	world.visible = true
+	if result == "player" and active_enemy_id != &"":
+		world.mark_enemy_defeated(active_enemy_id)
+	active_enemy_id = &""
 	if stat_screen.visible:
 		_refresh_stat_screen()
