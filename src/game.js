@@ -214,17 +214,30 @@ function tryVanish(attacker, defender, attackTier) {
 }
 
 function applyAttack(attacker, defender, cfg) {
-  const infusionPct = Number(kiInfusion.value) / 100;
+  const requestedInfusionPct = Number(kiInfusion.value);
+  const infusionPct = requestedInfusionPct / 100;
   const infusionCap = cfg.infusionCap ?? 0;
   const infusionCost = Math.round(attacker.maxDrawnKi * infusionPct * infusionCap);
+  const kiCost = cfg.kiCost ?? 0;
+  const staminaCost = cfg.staminaCost ?? 0;
 
-  if (attacker.stamina < (cfg.staminaCost ?? 0) || attacker.drawnKi < (cfg.kiCost ?? 0) + infusionCost) {
+  if (attacker.stamina < staminaCost || attacker.drawnKi < kiCost + infusionCost) {
+    if (attacker.drawnKi < kiCost + infusionCost && requestedInfusionPct > 0 && infusionCap > 0) {
+      const availableInfusionKi = Math.max(0, attacker.drawnKi - kiCost);
+      let maxInfusionPct = 0;
+      for (let pct = 0; pct <= 100; pct += 1) {
+        const pctCost = Math.round(attacker.maxDrawnKi * (pct / 100) * infusionCap);
+        if (pctCost <= availableInfusionKi) maxInfusionPct = pct;
+      }
+      addLog(`Not enough ki to attack with ${cfg.label} with ${requestedInfusionPct}% of ki infusion. (Max ${maxInfusionPct}%).`);
+      return;
+    }
     addLog(`${attacker.name} tried ${cfg.label}, but lacked resources.`);
     return;
   }
 
-  attacker.stamina -= cfg.staminaCost ?? 0;
-  attacker.drawnKi -= (cfg.kiCost ?? 0) + infusionCost;
+  attacker.stamina -= staminaCost;
+  attacker.drawnKi -= kiCost + infusionCost;
 
   const speedBoost = attacker.kaioken ? 2 : 1;
   const boostedSpeed = attacker.speed * speedBoost;
