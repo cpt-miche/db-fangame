@@ -60,11 +60,11 @@ func _on_action_pressed(action_id: StringName) -> void:
 	if state.is_finished():
 		return
 
-	state.player.guarding = false
 	var action_consumed := _match_player_action(action_id)
 	if not action_consumed:
 		_refresh_view()
 		return
+	state.player.guarding = false
 	if _check_end():
 		return
 
@@ -110,7 +110,7 @@ func _process_action(actor: FighterStats, target: FighterStats, action_id: Strin
 			var active_boost := _get_kaioken_transformation(actor)
 			var attack_result := resolver.resolve_attack(actor, target, selected_attack, action_infusion, active_boost, rng)
 			_log_attack_result(actor.fighter_name, selected_attack, attack_result)
-			return true
+			return attack_result.get("ok", false)
 
 func _apply_end_round() -> void:
 	state.turn += 1
