@@ -11,7 +11,7 @@ signal exit_requested
 @onready var debug_panel: PanelContainer = $DebugPanel
 @onready var debug_label: RichTextLabel = $DebugPanel/Margin/Stats
 @onready var exit_box: PanelContainer = $Margin/VBox/ExitBox
-@onready var exit_button: Button = $Margin/VBox/ExitBox/ExitBattleButton
+@onready var exit_button: Button = get_node_or_null("Margin/VBox/ExitBox/Margin/ExitBattleButton")
 
 var debug_mode_enabled := false
 
@@ -19,7 +19,10 @@ func _ready() -> void:
 	infusion_slider.value_changed.connect(_on_infusion_changed)
 	for button: Button in $Margin/VBox/Actions.get_children():
 		button.pressed.connect(func() -> void: action_pressed.emit(StringName(button.name)))
-	exit_button.pressed.connect(func() -> void: exit_requested.emit())
+	if exit_button != null:
+		exit_button.pressed.connect(func() -> void: exit_requested.emit())
+	else:
+		push_warning("ExitBattleButton node not found; exit action disabled for this BattleUI instance.")
 	debug_panel.visible = false
 	exit_box.visible = false
 	_on_infusion_changed(infusion_slider.value)
@@ -54,4 +57,5 @@ func set_battle_active(is_active: bool) -> void:
 	exit_box.visible = not is_active
 
 func set_exit_message(message: String) -> void:
-	exit_button.text = message
+	if exit_button != null:
+		exit_button.text = message
