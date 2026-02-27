@@ -9,7 +9,10 @@ extends Node
 @onready var eat_button: Button = $StatScreen/Margin/VBox/Actions/Eat
 
 var enemy_map := {
-	&"raditz_scout": preload("res://resources/fighters/raditz_scout.tres")
+	&"martial_artist": preload("res://resources/fighters/martial_artist.tres"),
+	&"saibaman": preload("res://resources/fighters/saibaman.tres"),
+	&"raditz_scout": preload("res://resources/fighters/raditz_scout.tres"),
+	&"frieza_force": preload("res://resources/fighters/frieza_force.tres"),
 }
 
 func _ready() -> void:

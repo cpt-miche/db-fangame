@@ -20,6 +20,10 @@ extends Resource
 @export var speed: int = 46
 @export var control: int = 42
 
+@export var attack_skill_ids: PackedStringArray = PackedStringArray([&"strike", &"ki_blast", &"ki_volley", &"ki_barrage"])
+@export var utility_skill_ids: PackedStringArray = PackedStringArray([&"power_up", &"guard", &"transform_form", &"kaioken"])
+@export var transformation_skill_ids: PackedStringArray = PackedStringArray([&"ss1", &"kaioken"])
+
 @export_range(0, 5, 1) var base_form_override_level: int = 0
 @export_range(0, 5, 1) var form_mastery_level: int = 0
 
@@ -28,6 +32,7 @@ var guarding: bool = false
 var kaioken_active: bool = false
 var form_level: int = 0
 var highest_form_rewarded_this_rest: int = 0
+var active_form_transformation_id: StringName = &""
 
 var base_max_stamina: int = 0
 var base_physical_strength: int = 0
@@ -49,6 +54,9 @@ func duplicate_runtime() -> FighterStats:
 	copy.ki_strength = ki_strength
 	copy.speed = speed
 	copy.control = control
+	copy.attack_skill_ids = attack_skill_ids.duplicate()
+	copy.utility_skill_ids = utility_skill_ids.duplicate()
+	copy.transformation_skill_ids = transformation_skill_ids.duplicate()
 	copy.base_form_override_level = base_form_override_level
 	copy.form_mastery_level = form_mastery_level
 	copy.form_level = base_form_override_level
@@ -58,6 +66,15 @@ func duplicate_runtime() -> FighterStats:
 	copy.base_ki_strength = ki_strength
 	copy.base_speed = speed
 	return copy
+
+func has_attack_skill(skill_id: StringName) -> bool:
+	return attack_skill_ids.has(skill_id)
+
+func has_utility_skill(skill_id: StringName) -> bool:
+	return utility_skill_ids.has(skill_id)
+
+func has_transformation_skill(skill_id: StringName) -> bool:
+	return transformation_skill_ids.has(skill_id)
 
 func clamp_resources() -> void:
 	hp = clampi(hp, 0, max_hp)

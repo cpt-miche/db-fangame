@@ -99,7 +99,9 @@ func resolve_attack(attacker: FighterStats, defender: FighterStats, attack: Atta
 	attacker.stamina -= attack.stamina_cost
 	attacker.drawn_ki -= attack.ki_cost + infusion_cost
 
-	var speed_hit_chance := get_hit_chance_from_speed(attacker.speed, defender.speed)
+	var speed_mult := transformation.speed_multiplier if transformation else 1.0
+	var effective_attacker_speed := int(round(float(attacker.speed) * speed_mult))
+	var speed_hit_chance := get_hit_chance_from_speed(effective_attacker_speed, defender.speed)
 	var speed_hit_delta := speed_hit_chance - HIT_CHANCE_BASE
 	var hit_chance := attack.base_hit + speed_hit_delta
 	hit_chance = clampf(hit_chance + infusion_ratio * 0.08 - (0.14 if defender.guarding else 0.0), HIT_CHANCE_MIN, HIT_CHANCE_MAX)
@@ -112,7 +114,7 @@ func resolve_attack(attacker: FighterStats, defender: FighterStats, attack: Atta
 			return {"ok": true, "result": "vanished", "details": vanish_result}
 
 	var suppression := 1.0 - get_suppression(attacker)
-	var trans_multiplier := transformation.damage_multiplier if (transformation and attacker.kaioken_active) else 1.0
+	var trans_multiplier := transformation.strength_multiplier if (transformation and attacker.kaioken_active) else 1.0
 	var stat_power := attacker.physical_strength if attack.attack_type == AttackDef.AttackType.PHYSICAL else attacker.ki_strength
 	var infusion_boost := 1.0 + infusion_ratio * 0.9
 	var raw_damage := (attack.base_damage + stat_power * attack.scaling) * suppression * trans_multiplier * infusion_boost
