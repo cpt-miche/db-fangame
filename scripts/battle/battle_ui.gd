@@ -11,7 +11,7 @@ signal exit_requested
 @onready var debug_panel: PanelContainer = $DebugPanel
 @onready var debug_label: RichTextLabel = $DebugPanel/Margin/Stats
 @onready var exit_box: PanelContainer = $Margin/VBox/ExitBox
-@onready var exit_button: Button = $Margin/VBox/ExitBox/ExitBattleButton
+@onready var exit_button: Button = $Margin/VBox/ExitBox/Margin/ExitBattleButton
 
 var debug_mode_enabled := false
 
