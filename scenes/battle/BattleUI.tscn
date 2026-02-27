@@ -81,7 +81,11 @@ text = "Power Up"
 layout_mode = 2
 text = "Guard"
 
-[node name="transform" type="Button" parent="Margin/VBox/Actions"]
+[node name="transform_form" type="Button" parent="Margin/VBox/Actions"]
+layout_mode = 2
+text = "Transform Up"
+
+[node name="kaioken" type="Button" parent="Margin/VBox/Actions"]
 layout_mode = 2
 text = "Kaioken"
 
