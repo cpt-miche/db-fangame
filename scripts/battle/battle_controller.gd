@@ -296,7 +296,13 @@ func _log_attack_result(attacker_name: String, attack: AttackDef, result: Dictio
 		"vanished":
 			_log("%s used %s but target vanished." % [attacker_name, attack.label])
 		"hit":
-			_log("%s used %s for %d dmg." % [attacker_name, attack.label, int(result.get("damage", 0))])
+			var damage := int(result.get("damage", 0))
+			_log("%s used %s for %d dmg." % [attacker_name, attack.label, damage])
+			var extra_strikes := int(result.get("extra_strikes", 0))
+			if extra_strikes > 0:
+				var strike_text := "strike" if extra_strikes == 1 else "two strikes"
+				var extra_damage := int(result.get("extra_damage", 0))
+				_log("%s is faster and gains an extra %s for %d damage" % [attacker_name, strike_text, extra_damage])
 
 func _check_end() -> bool:
 	if not state.is_finished():

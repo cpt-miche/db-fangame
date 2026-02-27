@@ -119,6 +119,14 @@ func resolve_attack(attacker: FighterStats, defender: FighterStats, attack: Atta
 	var infusion_boost := 1.0 + infusion_ratio * 0.9
 	var raw_damage := (attack.base_damage + stat_power * attack.scaling) * suppression * trans_multiplier * infusion_boost
 	var final_damage := compute_hp_damage(defender, raw_damage)
+	var speed_ratio := float(effective_attacker_speed) / maxf(1.0, float(defender.speed))
+	var extra_strikes := 0
+	if speed_ratio >= 1.8:
+		extra_strikes = 2
+	elif speed_ratio >= 1.35:
+		extra_strikes = 1
+	var extra_damage := final_damage * extra_strikes
+	final_damage += extra_damage
 
 	defender.hp -= final_damage
 	attacker.escalation += attack.escalation_gain
@@ -128,5 +136,7 @@ func resolve_attack(attacker: FighterStats, defender: FighterStats, attack: Atta
 		"ok": true,
 		"result": "hit",
 		"damage": final_damage,
+		"extra_strikes": extra_strikes,
+		"extra_damage": extra_damage,
 		"infusion_cost": infusion_cost,
 	}
