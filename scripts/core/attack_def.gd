@@ -16,6 +16,7 @@ enum AttackType { PHYSICAL, KI, UTILITY }
 @export var can_vanish: bool = true
 @export var attack_tier: int = 1
 @export var escalation_gain: float = 6.0
+@export var required_transformation_id: StringName = &""
 
 func is_ki_attack() -> bool:
 	return attack_type == AttackType.KI

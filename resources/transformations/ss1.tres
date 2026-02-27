@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="TransformationDef" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/transformation_def.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"ss1"
+label = "Super Saiyan"
+is_form_transformation = true
+is_toggle_transformation = false
+form_level = 1
+required_form_level = 0
+required_hp_pct = 0.0
+required_stamina_pct = 0.05
+required_stored_ki_pct = 0.02
+strength_multiplier = 5.0
+speed_multiplier = 2.0
+max_stamina_multiplier = 2.0
+stored_ki_upkeep_pct = 0.01
+stored_to_drawn_pct = 0.01

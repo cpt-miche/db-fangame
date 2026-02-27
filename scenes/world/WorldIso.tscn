@@ -18,8 +18,21 @@ position = Vector2(320, 240)
 
 [node name="Enemies" type="Node2D" parent="."]
 
-[node name="EnemyNPC" parent="Enemies" instance=ExtResource("3")]
-position = Vector2(540, 300)
+[node name="MartialArtistNPC" parent="Enemies" instance=ExtResource("3")]
+position = Vector2(480, 220)
+enemy_id = &"martial_artist"
+
+[node name="SaibamanNPC" parent="Enemies" instance=ExtResource("3")]
+position = Vector2(600, 220)
+enemy_id = &"saibaman"
+
+[node name="RaditzNPC" parent="Enemies" instance=ExtResource("3")]
+position = Vector2(540, 320)
+enemy_id = &"raditz_scout"
+
+[node name="FriezaForceNPC" parent="Enemies" instance=ExtResource("3")]
+position = Vector2(700, 300)
+enemy_id = &"frieza_force"
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(640, 360)

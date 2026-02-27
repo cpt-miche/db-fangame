@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FighterStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/fighter_stats.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+fighter_name = "Martial Artist"
+max_hp = 320
+hp = 320
+max_stamina = 220
+stamina = 220
+max_stored_ki = 0
+stored_ki = 0
+max_drawn_ki = 0
+drawn_ki = 0
+physical_strength = 38
+ki_strength = 0
+speed = 34
+control = 0
+attack_skill_ids = PackedStringArray(&"strike")
+utility_skill_ids = PackedStringArray(&"guard")
+transformation_skill_ids = PackedStringArray()

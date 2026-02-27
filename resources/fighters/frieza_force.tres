@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="FighterStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/fighter_stats.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+fighter_name = "Frieza Force"
+max_hp = 740
+hp = 740
+max_stamina = 360
+stamina = 360
+max_stored_ki = 620
+stored_ki = 620
+max_drawn_ki = 420
+drawn_ki = 220
+physical_strength = 86
+ki_strength = 94
+speed = 76
+control = 70
+attack_skill_ids = PackedStringArray(&"strike", &"ki_blast", &"ki_volley", &"ki_barrage")
+utility_skill_ids = PackedStringArray(&"power_up", &"guard", &"transform_form")
+transformation_skill_ids = PackedStringArray(&"frieza_second_form")

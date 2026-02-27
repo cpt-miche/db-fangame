@@ -70,7 +70,7 @@ const enemyRoster = [
     speed: 40,
     control: 36,
     canUseKi: true,
-    canKaioken: true,
+    canKaioken: false,
     strengthLabel: 'Medium'
   },
   {
@@ -105,7 +105,7 @@ const actions = [
   { key: 'barrage', label: 'Ki Blast Barrage' },
   { key: 'powerUp', label: 'Power Up (+Drawn Ki)' },
   { key: 'guard', label: 'Guard' },
-  { key: 'transform', label: 'Kaioken' }
+  { key: 'transform', label: 'Transform (SS1)' }
 ];
 
 function makeFighter(name, isPlayer = false) {
@@ -127,6 +127,7 @@ function makeFighter(name, isPlayer = false) {
     escalation: 0,
     guard: false,
     kaioken: false,
+    formLevel: 0,
     roundDrain: { hp: 0, stamina: 0, drawnKi: 0 }
   };
 }
@@ -225,8 +226,10 @@ function applyAttack(attacker, defender, cfg) {
   attacker.stamina -= cfg.staminaCost ?? 0;
   attacker.drawnKi -= (cfg.kiCost ?? 0) + infusionCost;
 
+  const speedBoost = attacker.kaioken ? 2 : 1;
+  const boostedSpeed = attacker.speed * speedBoost;
   const hitChance = clamp(
-    cfg.baseHit + (attacker.speed - defender.speed) * 0.006 + infusionPct * 0.08 - (defender.guard ? 0.14 : 0),
+    cfg.baseHit + (boostedSpeed - defender.speed) * 0.006 + infusionPct * 0.08 - (defender.guard ? 0.14 : 0),
     0.1,
     0.95
   );
@@ -239,7 +242,7 @@ function applyAttack(attacker, defender, cfg) {
   if (cfg.canVanish && tryVanish(attacker, defender, cfg.tier)) return;
 
   const suppression = 1 - getSuppression(attacker);
-  const transBoost = attacker.kaioken ? 1.28 : 1;
+  const transBoost = attacker.kaioken ? 2 : 1;
   const statPower = cfg.type === 'physical' ? attacker.physical : attacker.ki;
   const infusionBoost = 1 + infusionPct * 0.9;
   const raw = (cfg.base + statPower * cfg.scaling) * suppression * transBoost * infusionBoost;
@@ -252,11 +255,12 @@ function applyAttack(attacker, defender, cfg) {
 
 function applyRoundDrain(fighter) {
   if (!fighter.kaioken) return;
-  const hpDrain = 8;
-  const staminaDrain = 14 - Math.round(fighter.control * 0.06);
-  fighter.hp -= hpDrain;
-  fighter.stamina -= staminaDrain;
-  addLog(`${fighter.name}'s Kaioken drains ${hpDrain} HP and ${staminaDrain} stamina.`);
+  const hpUpkeep = Math.round(fighter.maxHp * 0.01);
+  const masteryFactor = Math.max(0, 1 - fighter.control * 0.002);
+  const staminaUpkeep = Math.round(fighter.maxStamina * 0.06 * masteryFactor);
+  fighter.hp -= hpUpkeep;
+  fighter.stamina -= staminaUpkeep;
+  addLog(`${fighter.name}'s Kaioken upkeep: -${hpUpkeep} HP, -${staminaUpkeep} stamina.`);
 }
 
 function playerAction(actionKey) {
@@ -312,15 +316,25 @@ function playerAction(actionKey) {
       addLog('Player braces and guards.');
       break;
     case 'transform':
-      if (p.kaioken) {
-        p.kaioken = false;
-        addLog('Kaioken deactivated.');
-      } else if (p.stamina >= 35 && p.hp >= 40) {
-        p.kaioken = true;
-        p.escalation += 12;
-        addLog('Kaioken activated: power up, but it drains stamina and HP each round.');
+      if (p.formLevel >= 1) {
+        addLog(`${p.name} is already at maximum form for this build.`);
       } else {
-        addLog('Not enough HP/Stamina to safely activate Kaioken.');
+        const requiredStamina = Math.ceil(p.maxStamina * 0.05);
+        const requiredStoredKi = Math.ceil(p.maxStoredKi * 0.02);
+        if (p.stamina < requiredStamina || p.storedKi < requiredStoredKi) {
+          addLog(`SS1 requires at least ${requiredStamina} stamina and ${requiredStoredKi} stored ki.`);
+          break;
+        }
+        const prevMaxStamina = p.maxStamina;
+        const prevStamina = p.stamina;
+        p.formLevel = 1;
+        p.physical = Math.round(p.physical * 5);
+        p.ki = Math.round(p.ki * 5);
+        p.speed = Math.round(p.speed * 2);
+        p.maxStamina = Math.round(p.maxStamina * 2);
+        const staminaMult = p.maxStamina / Math.max(1, prevMaxStamina);
+        p.stamina = clamp(Math.round(prevStamina * staminaMult), 0, p.maxStamina);
+        addLog(`${p.name} transforms to SS1! Stamina ${prevStamina}/${prevMaxStamina} -> ${p.stamina}/${p.maxStamina}.`);
       }
       break;
   }
@@ -354,16 +368,36 @@ function enemyTurn() {
     return;
   }
 
-  if (e.canKaioken && !e.kaioken && e.hp < 220 && e.stamina > 60 && Math.random() < 0.35) {
-    e.kaioken = true;
-    e.escalation += 10;
-    addLog(`${e.name} flares into Kaioken!`);
-    return;
+  if (!e.name.startsWith('Raditz') && e.formLevel < 1 && Math.random() < 0.35) {
+    const requiredStamina = Math.ceil(e.maxStamina * 0.05);
+    const requiredStoredKi = Math.ceil(e.maxStoredKi * 0.02);
+    if (e.stamina >= requiredStamina && e.storedKi >= requiredStoredKi) {
+      const prevMaxStamina = e.maxStamina;
+      const prevStamina = e.stamina;
+      e.formLevel = 1;
+      e.physical = Math.round(e.physical * 5);
+      e.ki = Math.round(e.ki * 5);
+      e.speed = Math.round(e.speed * 2);
+      e.maxStamina = Math.round(e.maxStamina * 2);
+      const staminaMult = e.maxStamina / Math.max(1, prevMaxStamina);
+      e.stamina = clamp(Math.round(prevStamina * staminaMult), 0, e.maxStamina);
+      addLog(`${e.name} transforms to ${e.tag === 'FREIZA' ? 'Frieza Second Form' : 'SS1'}!`);
+      return;
+    }
   }
 
   if (lowStam && Math.random() < 0.5) {
     e.guard = true;
     addLog(`${e.name} guards and regains footing.`);
+    return;
+  }
+
+  if (e.tag === 'RADITZ' && e.drawnKi >= 68 && e.stamina >= 10 && Math.random() < 0.45) {
+    applyAttack(e, p, {
+      label: 'Double Sunday', type: 'ki', base: 62, scaling: 1.2,
+      baseHit: 0.8, staminaCost: 10, kiCost: 68, infusionCap: 0.45,
+      canVanish: true, tier: 2, escalationGain: 12
+    });
     return;
   }
 
@@ -418,7 +452,7 @@ function renderFighter(f) {
 
   return `
   <div class="card">
-    <strong>${f.name} ${f.kaioken ? '(Kaioken)' : ''}</strong>
+    <strong>${f.name} ${f.formLevel > 0 ? `(Form ${f.formLevel})` : ''} ${f.kaioken ? '(Kaioken)' : ''}</strong>
     ${renderBar('HP', f.hp, f.maxHp)}
     ${renderBar('Stam', f.stamina, f.maxStamina)}
     ${renderBar('Stored Ki', f.storedKi, f.maxStoredKi)}
