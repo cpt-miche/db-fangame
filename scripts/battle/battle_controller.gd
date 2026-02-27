@@ -13,6 +13,14 @@ signal battle_finished(result: String)
 
 @onready var ui: Control = $"../BattleUI"
 
+const MAX_FORM_LEVEL := 5
+const FORM_STRENGTH_MULT := {0: 1.0, 1: 5.0}
+const FORM_KI_MULT := {0: 1.0, 1: 5.0}
+const FORM_SPEED_MULT := {0: 1.0, 1: 2.0}
+const FORM_MAX_STAMINA_MULT := {0: 1.0, 1: 2.0}
+const FORM_STORED_KI_UPKEEP_PCT := {0: 0.0, 1: 0.01}
+const FORM_STORED_TO_DRAWN_PCT := {0: 0.0, 1: 0.01}
+
 var state := BattleState.new()
 var resolver := CombatResolver.new()
 var enemy_ai := EnemyAI.new()
@@ -29,6 +37,8 @@ func _ready() -> void:
 		&"ki_barrage": ki_barrage_attack,
 	}
 	state.setup(player_base, enemy_base)
+	_apply_form_scaling(state.player, true)
+	_apply_form_scaling(state.enemy, true)
 	ui.action_pressed.connect(_on_action_pressed)
 	ui.infusion_changed.connect(func(v: float) -> void: infusion_ratio = v)
 	_refresh_view()
@@ -91,6 +101,8 @@ func _apply_end_round() -> void:
 	state.turn += 1
 	state.player.escalation += 3
 	state.enemy.escalation += 3
+	_apply_form_ki_drain(state.player)
+	_apply_form_ki_drain(state.enemy)
 	_apply_kaioken_drain(state.player)
 	_apply_kaioken_drain(state.enemy)
 	state.player.stamina = clampi(state.player.stamina + 10, 0, state.player.max_stamina)
@@ -109,11 +121,11 @@ func _power_up(fighter: FighterStats) -> void:
 	_log("%s powers up (+%d drawn ki)." % [fighter.fighter_name, amount])
 
 func _transform_higher_form(fighter: FighterStats) -> void:
-	const MAX_FORM_LEVEL := 5
 	if fighter.form_level >= MAX_FORM_LEVEL:
 		_log("%s is already at maximum form." % fighter.fighter_name)
 		return
 	fighter.form_level += 1
+	_apply_form_scaling(fighter, false)
 	var newly_rewarded_levels := maxi(0, fighter.form_level - fighter.highest_form_rewarded_this_rest)
 	if newly_rewarded_levels > 0:
 		var stamina_gain := int(round(float(fighter.max_stamina) * 0.25 * float(newly_rewarded_levels)))
@@ -142,6 +154,45 @@ func _apply_kaioken_drain(fighter: FighterStats) -> void:
 	fighter.stamina -= kaioken_def.get_adjusted_stamina_drain(fighter.control)
 	fighter.drawn_ki -= kaioken_def.drain_drawn_ki_per_turn
 	_log("%s takes Kaioken upkeep drain." % fighter.fighter_name)
+
+func _apply_form_ki_drain(fighter: FighterStats) -> void:
+	var upkeep_pct := _get_form_value(FORM_STORED_KI_UPKEEP_PCT, fighter.form_level)
+	var conversion_pct := _get_form_value(FORM_STORED_TO_DRAWN_PCT, fighter.form_level)
+	if upkeep_pct <= 0.0 and conversion_pct <= 0.0:
+		return
+
+	var mastery_factor := clampf(1.0 - float(fighter.form_mastery_level) * 0.2, 0.0, 1.0)
+	var upkeep_amount := int(round(float(fighter.max_stored_ki) * upkeep_pct * mastery_factor))
+	var conversion_amount := int(round(float(fighter.max_stored_ki) * conversion_pct * mastery_factor))
+	upkeep_amount = mini(upkeep_amount, fighter.stored_ki)
+	fighter.stored_ki -= upkeep_amount
+
+	var convert_spend := mini(conversion_amount, fighter.stored_ki)
+	fighter.stored_ki -= convert_spend
+	var draw_gain := mini(convert_spend, fighter.max_drawn_ki - fighter.drawn_ki)
+	fighter.drawn_ki += draw_gain
+
+	if upkeep_amount > 0 or convert_spend > 0 or draw_gain > 0:
+		_log("%s form upkeep drains %d stored ki and converts %d to drawn ki." % [fighter.fighter_name, upkeep_amount + convert_spend, draw_gain])
+
+func _apply_form_scaling(fighter: FighterStats, preserve_stamina_ratio: bool) -> void:
+	var stamina_ratio := float(fighter.stamina) / maxf(1.0, float(fighter.max_stamina))
+	fighter.physical_strength = int(round(float(fighter.base_physical_strength) * _get_form_value(FORM_STRENGTH_MULT, fighter.form_level)))
+	fighter.ki_strength = int(round(float(fighter.base_ki_strength) * _get_form_value(FORM_KI_MULT, fighter.form_level)))
+	fighter.speed = int(round(float(fighter.base_speed) * _get_form_value(FORM_SPEED_MULT, fighter.form_level)))
+	fighter.max_stamina = int(round(float(fighter.base_max_stamina) * _get_form_value(FORM_MAX_STAMINA_MULT, fighter.form_level)))
+	if preserve_stamina_ratio:
+		fighter.stamina = int(round(float(fighter.max_stamina) * clampf(stamina_ratio, 0.0, 1.0)))
+	fighter.clamp_resources()
+
+func _get_form_value(table: Dictionary, form_level: int) -> float:
+	if table.has(form_level):
+		return float(table[form_level])
+	var best_key := 0
+	for key in table.keys():
+		if int(key) <= form_level and int(key) > best_key:
+			best_key = int(key)
+	return float(table.get(best_key, 1.0))
 
 func _log_attack_result(attacker_name: String, attack: AttackDef, result: Dictionary) -> void:
 	if not result.get("ok", false):
@@ -191,5 +242,6 @@ func _fighter_stat_lines(f: FighterStats) -> PackedStringArray:
 		"Escalation: %d" % int(f.escalation),
 		"Form Level: %d" % f.form_level,
 		"Base Form Override: %d" % f.base_form_override_level,
+		"Form Mastery: %d" % f.form_mastery_level,
 		"Kaioken Active: %s" % ("Yes" if f.kaioken_active else "No"),
 	])
