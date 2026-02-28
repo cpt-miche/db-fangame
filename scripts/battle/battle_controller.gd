@@ -153,6 +153,7 @@ func _transform_higher_form(fighter: FighterStats) -> void:
 
 	var previous_stamina := fighter.stamina
 	var previous_max_stamina := fighter.max_stamina
+	_deactivate_incompatible_transformations(fighter, transform)
 	fighter.form_level = transform.form_level
 	fighter.active_form_transformation_id = transform.id
 	_apply_form_scaling(fighter, false)
@@ -167,6 +168,13 @@ func _transform_higher_form(fighter: FighterStats) -> void:
 		fighter.stamina,
 		fighter.max_stamina,
 	])
+
+func _deactivate_incompatible_transformations(fighter: FighterStats, transform: TransformationDef) -> void:
+	if transform == null:
+		return
+	if transform.incompatible_transformation_ids.has(&"kaioken") and fighter.kaioken_active:
+		fighter.kaioken_active = false
+		_log("%s's Kaioken is cancelled by %s." % [fighter.fighter_name, transform.label])
 
 func _toggle_kaioken(fighter: FighterStats) -> bool:
 	if not fighter.has_utility_skill(&"kaioken") or not fighter.has_transformation_skill(&"kaioken"):
