@@ -84,8 +84,8 @@ func _process_action(actor: FighterStats, target: FighterStats, action_id: Strin
 		&"power_up":
 			_power_up(actor)
 			return true
-		&"kaioken":
-			return _toggle_kaioken(actor)
+		&"shuten_gate_1", &"shuten_gate_2", &"shuten_gate_3":
+			return _activate_shuten_gate(actor, action_id)
 		&"transform_form":
 			_transform_higher_form(actor)
 			return true
@@ -97,7 +97,7 @@ func _process_action(actor: FighterStats, target: FighterStats, action_id: Strin
 			if not _can_use_attack_with_active_buffs(actor, selected_attack):
 				_log("%s cannot use %s without required transformation." % [actor.fighter_name, selected_attack.label])
 				return true
-			var active_boost := _get_kaioken_transformation(actor)
+			var active_boost := _get_active_shuten_transformation(actor)
 			var attack_result := resolver.resolve_attack(actor, target, selected_attack, action_infusion, active_boost, rng)
 			_log_attack_result(actor.fighter_name, selected_attack, attack_result)
 			return attack_result.get("ok", false)
@@ -108,8 +108,8 @@ func _apply_end_round() -> void:
 	state.enemy.escalation += 3
 	_apply_form_upkeep(state.player)
 	_apply_form_upkeep(state.enemy)
-	_apply_kaioken_upkeep(state.player)
-	_apply_kaioken_upkeep(state.enemy)
+	_apply_shuten_upkeep(state.player)
+	_apply_shuten_upkeep(state.enemy)
 	state.player.stamina = clampi(state.player.stamina + 10, 0, state.player.max_stamina)
 	state.enemy.stamina = clampi(state.enemy.stamina + 10, 0, state.enemy.max_stamina)
 	state.player.clamp_resources()
@@ -162,49 +162,50 @@ func _transform_higher_form(fighter: FighterStats) -> void:
 func _deactivate_incompatible_transformations(fighter: FighterStats, transform: TransformationDef) -> void:
 	if transform == null:
 		return
-	if transform.incompatible_transformation_ids.has(&"kaioken") and fighter.kaioken_active:
-		fighter.kaioken_active = false
-		_log("%s's Kaioken is cancelled by %s." % [fighter.fighter_name, transform.label])
-
-func _toggle_kaioken(fighter: FighterStats) -> bool:
-	if not fighter.has_utility_skill(&"kaioken") or not fighter.has_transformation_skill(&"kaioken"):
-		_log("%s cannot use Kaioken." % fighter.fighter_name)
-		return true
-	if fighter.kaioken_active:
-		fighter.kaioken_active = false
+	if fighter.active_shuten_transformation_id != &"" and transform.incompatible_transformation_ids.has(fighter.active_shuten_transformation_id):
+		var cancelled := _get_active_shuten_transformation(fighter)
+		fighter.active_shuten_transformation_id = &""
 		_apply_form_scaling(fighter, false)
-		_log("%s deactivates Kaioken." % fighter.fighter_name)
+		_log("%s's %s is cancelled by %s." % [fighter.fighter_name, cancelled.label if cancelled else "Shuten", transform.label])
+
+func _activate_shuten_gate(fighter: FighterStats, gate_id: StringName) -> bool:
+	if not fighter.has_utility_skill(&"shuten") or not fighter.has_transformation_skill(gate_id):
+		_log("%s cannot use %s." % [fighter.fighter_name, String(gate_id)])
 		return true
 	if fighter.form_level > 0:
-		_log("%s can only use Kaioken in base form." % fighter.fighter_name)
+		_log("%s can only use Shuten in base form." % fighter.fighter_name)
 		return true
-	var kaioken: TransformationDef = transformations.get(&"kaioken", null)
-	if kaioken == null:
-		_log("Kaioken transformation is not configured.")
+	if fighter.active_shuten_transformation_id == gate_id:
+		var active := _get_active_shuten_transformation(fighter)
+		fighter.active_shuten_transformation_id = &""
+		_apply_form_scaling(fighter, false)
+		_log("%s deactivates %s." % [fighter.fighter_name, active.label if active else String(gate_id)])
 		return true
-	if not kaioken.can_activate(fighter):
-		_log("%s lacks activation requirements for Kaioken." % fighter.fighter_name)
+	var shuten: TransformationDef = transformations.get(gate_id, null)
+	if shuten == null:
+		_log("%s transformation is not configured." % String(gate_id))
 		return true
-	fighter.kaioken_active = true
+	if not shuten.can_activate(fighter):
+		_log("%s lacks activation requirements for %s." % [fighter.fighter_name, shuten.label])
+		return true
+	fighter.active_shuten_transformation_id = gate_id
 	_apply_form_scaling(fighter, false)
 	fighter.escalation += 12
-	_log("%s activates Kaioken!" % fighter.fighter_name)
+	_log("%s activates %s!" % [fighter.fighter_name, shuten.label])
 	return true
 
-func _apply_kaioken_upkeep(fighter: FighterStats) -> void:
-	if not fighter.kaioken_active:
+func _apply_shuten_upkeep(fighter: FighterStats) -> void:
+	var shuten := _get_active_shuten_transformation(fighter)
+	if shuten == null:
 		return
-	var kaioken := _get_kaioken_transformation(fighter)
-	if kaioken == null:
-		return
-	var hp_upkeep := int(round(float(fighter.max_hp) * kaioken.hp_upkeep_pct))
-	var stamina_upkeep := int(round(float(fighter.max_stamina) * kaioken.stamina_upkeep_pct))
-	var drawn_ki_upkeep := int(round(float(fighter.max_drawn_ki) * kaioken.drawn_ki_upkeep_pct))
+	var hp_upkeep := int(round(float(fighter.max_hp) * shuten.hp_upkeep_pct))
+	var stamina_upkeep := int(round(float(fighter.max_stamina) * shuten.stamina_upkeep_pct))
+	var drawn_ki_upkeep := int(round(float(fighter.max_drawn_ki) * shuten.drawn_ki_upkeep_pct))
 	fighter.hp -= hp_upkeep
 	fighter.stamina -= stamina_upkeep
 	fighter.drawn_ki -= drawn_ki_upkeep
 	if hp_upkeep > 0 or stamina_upkeep > 0 or drawn_ki_upkeep > 0:
-		_log("%s Kaioken upkeep: -%d HP, -%d stamina, -%d drawn ki." % [fighter.fighter_name, hp_upkeep, stamina_upkeep, drawn_ki_upkeep])
+		_log("%s %s upkeep: -%d HP, -%d stamina, -%d drawn ki." % [fighter.fighter_name, shuten.label, hp_upkeep, stamina_upkeep, drawn_ki_upkeep])
 
 func _apply_form_upkeep(fighter: FighterStats) -> void:
 	var active_form := _get_active_form_transformation(fighter)
@@ -229,7 +230,7 @@ func _apply_form_upkeep(fighter: FighterStats) -> void:
 func _apply_form_scaling(fighter: FighterStats, preserve_stamina_ratio: bool) -> void:
 	var stamina_ratio := float(fighter.stamina) / maxf(1.0, float(fighter.max_stamina))
 	var active_form := _get_active_form_transformation(fighter)
-	var kaioken := _get_kaioken_transformation(fighter)
+	var shuten := _get_active_shuten_transformation(fighter)
 	var physical_mult := 1.0
 	var ki_mult := 1.0
 	var speed_mult := 1.0
@@ -239,11 +240,11 @@ func _apply_form_scaling(fighter: FighterStats, preserve_stamina_ratio: bool) ->
 		ki_mult = active_form.strength_multiplier
 		speed_mult = active_form.speed_multiplier
 		stamina_mult = active_form.max_stamina_multiplier
-	if kaioken:
-		physical_mult *= kaioken.strength_multiplier
-		ki_mult *= kaioken.strength_multiplier
-		speed_mult *= kaioken.speed_multiplier
-		stamina_mult *= kaioken.max_stamina_multiplier
+	if shuten:
+		physical_mult *= shuten.strength_multiplier
+		ki_mult *= shuten.strength_multiplier
+		speed_mult *= shuten.speed_multiplier
+		stamina_mult *= shuten.max_stamina_multiplier
 
 	fighter.physical_strength = int(round(float(fighter.base_physical_strength) * physical_mult))
 	fighter.ki_strength = int(round(float(fighter.base_ki_strength) * ki_mult))
@@ -272,16 +273,16 @@ func _get_active_form_transformation(fighter: FighterStats) -> TransformationDef
 		return null
 	return transformations.get(fighter.active_form_transformation_id, null)
 
-func _get_kaioken_transformation(fighter: FighterStats) -> TransformationDef:
-	if not fighter.kaioken_active:
+func _get_active_shuten_transformation(fighter: FighterStats) -> TransformationDef:
+	if fighter.active_shuten_transformation_id == &"":
 		return null
-	return transformations.get(&"kaioken", null)
+	return transformations.get(fighter.active_shuten_transformation_id, null)
 
 func _can_use_attack_with_active_buffs(fighter: FighterStats, attack: AttackDef) -> bool:
 	if attack.required_transformation_id == &"":
 		return true
-	if attack.required_transformation_id == &"kaioken":
-		return fighter.kaioken_active
+	if attack.required_transformation_id.begins_with("shuten_gate_"):
+		return fighter.active_shuten_transformation_id == attack.required_transformation_id
 	return fighter.active_form_transformation_id == attack.required_transformation_id
 
 func _log_attack_result(attacker_name: String, attack: AttackDef, result: Dictionary) -> void:
@@ -337,7 +338,7 @@ func _refresh_view() -> void:
 func _fighter_line(f: FighterStats) -> String:
 	return "%s HP %d/%d | Stam %d/%d | StoredKi %d/%d | DrawnKi %d/%d | Form %d%s" % [
 		f.fighter_name, f.hp, f.max_hp, f.stamina, f.max_stamina, f.stored_ki, f.max_stored_ki, f.drawn_ki, f.max_drawn_ki, f.form_level,
-		" +Kaioken" if f.kaioken_active else ""
+		" +%s" % String(f.active_shuten_transformation_id) if f.active_shuten_transformation_id != &"" else ""
 	]
 
 func _fighter_stat_lines(f: FighterStats) -> PackedStringArray:
@@ -355,7 +356,8 @@ func _fighter_stat_lines(f: FighterStats) -> PackedStringArray:
 		"Active Form Transform: %s" % String(f.active_form_transformation_id),
 		"Base Form Override: %d" % f.base_form_override_level,
 		"Form Mastery: %d" % f.form_mastery_level,
-		"Kaioken Active: %s" % ("Yes" if f.kaioken_active else "No"),
+		"Shuten Active: %s" % ("Yes" if f.active_shuten_transformation_id != &"" else "No"),
+		"Active Shuten Gate: %s" % String(f.active_shuten_transformation_id),
 	])
 
 
@@ -386,7 +388,7 @@ func _fighter_debug_lines(f: FighterStats) -> PackedStringArray:
 		"Physical: %d (base %d)" % [f.physical_strength, f.base_physical_strength],
 		"Ki: %d (base %d)" % [f.ki_strength, f.base_ki_strength],
 		"Speed: %d (base %d)" % [f.speed, f.base_speed],
-		"Form: %d | Active: %s | Kaioken: %s" % [f.form_level, String(f.active_form_transformation_id), "On" if f.kaioken_active else "Off"],
+		"Form: %d | Active: %s | Shuten: %s" % [f.form_level, String(f.active_form_transformation_id), String(f.active_shuten_transformation_id)],
 		"Attack Skills: %s" % _join_skill_ids(f.attack_skill_ids),
 		"Utility Skills: %s" % _join_skill_ids(f.utility_skill_ids),
 		"Transformation Skills: %s" % _join_skill_ids(f.transformation_skill_ids),

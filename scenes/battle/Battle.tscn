@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/battle/BattleUI.tscn" id="1"]
 [ext_resource type="Script" path="res://scripts/battle/battle_controller.gd" id="2"]
@@ -10,6 +10,8 @@
 [ext_resource type="Resource" path="res://resources/attacks/ki_barrage.tres" id="9"]
 [ext_resource type="Resource" path="res://resources/transformations/kaioken.tres" id="10"]
 [ext_resource type="Resource" path="res://resources/transformations/ss1.tres" id="11"]
+[ext_resource type="Resource" path="res://resources/transformations/shuten_second_gate.tres" id="14"]
+[ext_resource type="Resource" path="res://resources/transformations/shuten_final_gate.tres" id="15"]
 [ext_resource type="Resource" path="res://resources/attacks/double_sunday.tres" id="12"]
 [ext_resource type="Resource" path="res://resources/transformations/frieza_second_form.tres" id="13"]
 
@@ -26,6 +28,6 @@ script = ExtResource("2")
 player_base = ExtResource("3")
 enemy_base = ExtResource("4")
 attack_pool = [ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9"), ExtResource("12")]
-transformation_pool = [ExtResource("10"), ExtResource("11"), ExtResource("13")]
+transformation_pool = [ExtResource("10"), ExtResource("11"), ExtResource("13"), ExtResource("14"), ExtResource("15")]
 
 [node name="BattleUI" parent="." instance=ExtResource("1")]
