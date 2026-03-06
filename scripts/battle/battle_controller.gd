@@ -19,6 +19,8 @@ var infusion_ratio: float = 0.0
 var attacks: Dictionary = {}
 var transformations: Dictionary = {}
 var pending_result: String = ""
+var player_used_primary_action: bool = false
+var player_used_secondary_action: bool = false
 
 func _ready() -> void:
 	rng.randomize()
@@ -37,6 +39,8 @@ func start_battle(enemy: FighterStats) -> void:
 	_apply_form_scaling(state.player, true)
 	_apply_form_scaling(state.enemy, true)
 	pending_result = ""
+	player_used_primary_action = false
+	player_used_secondary_action = false
 	ui.clear_log()
 	ui.set_battle_active(true)
 	ui.set_exit_message("Exit battle")
@@ -59,25 +63,114 @@ func get_player_stat_lines() -> PackedStringArray:
 func _on_action_pressed(action_id: StringName) -> void:
 	if state.is_finished():
 		return
+	if not _can_use_player_action(action_id):
+		_refresh_view()
+		return
 
 	var action_consumed := _match_player_action(action_id)
 	if not action_consumed:
 		_refresh_view()
 		return
+	_mark_player_action_used(action_id)
 	if _check_end():
+		return
+	if not _has_player_completed_turn_actions():
+		_refresh_view()
 		return
 
 	_resolve_enemy_turn()
 	_apply_end_round()
+	player_used_primary_action = false
+	player_used_secondary_action = false
 	_check_end()
 	_refresh_view()
+
+func _can_use_player_action(action_id: StringName) -> bool:
+	var action_type := _get_action_type(action_id)
+	if action_type == "primary" and player_used_primary_action:
+		_log("Primary action already used this turn.")
+		return false
+	if action_type == "secondary" and player_used_secondary_action:
+		_log("Secondary action already used this turn.")
+		return false
+	return true
+
+func _mark_player_action_used(action_id: StringName) -> void:
+	var action_type := _get_action_type(action_id)
+	if action_type == "primary":
+		player_used_primary_action = true
+	else:
+		player_used_secondary_action = true
+
+func _has_player_completed_turn_actions() -> bool:
+	return player_used_primary_action and player_used_secondary_action
+
+func _get_action_type(action_id: StringName) -> String:
+	if action_id == &"power_up" or action_id == &"transform_form" or action_id == &"shuten_gate_1" or action_id == &"shuten_gate_2" or action_id == &"shuten_gate_3":
+		return "secondary"
+	return "primary"
 
 func _match_player_action(action_id: StringName) -> bool:
 	return _process_action(state.player, state.enemy, action_id, infusion_ratio)
 
 func _resolve_enemy_turn() -> void:
-	var action := enemy_ai.choose_action(state.enemy, attacks, transformations, 0.25)
-	_process_action(state.enemy, state.player, action, 0.25)
+	var enemy_primary_action := _choose_enemy_action_for_slot("primary", 0.25)
+	if enemy_primary_action != &"":
+		_process_action(state.enemy, state.player, enemy_primary_action, 0.25)
+	else:
+		_log("%s cannot find a usable primary action." % state.enemy.fighter_name)
+
+	var enemy_secondary_action := _choose_enemy_action_for_slot("secondary", 0.25)
+	if enemy_secondary_action != &"":
+		_process_action(state.enemy, state.player, enemy_secondary_action, 0.25)
+	else:
+		_log("%s cannot find a usable secondary action." % state.enemy.fighter_name)
+
+func _choose_enemy_action_for_slot(action_type: String, enemy_infusion: float) -> StringName:
+	var ai_choice := enemy_ai.choose_action(state.enemy, attacks, transformations, enemy_infusion)
+	if _get_action_type(ai_choice) == action_type and _can_enemy_use_action(ai_choice, enemy_infusion):
+		return ai_choice
+
+	if action_type == "primary":
+		var primary_candidates: Array[StringName] = [&"strike", &"ki_blast", &"double_sunday", &"ki_volley", &"ki_barrage"]
+		for candidate in primary_candidates:
+			if _can_enemy_use_action(candidate, enemy_infusion):
+				return candidate
+		return &""
+
+	var secondary_candidates: Array[StringName] = [&"transform_form", &"shuten_gate_1", &"power_up"]
+	for candidate in secondary_candidates:
+		if _can_enemy_use_action(candidate, enemy_infusion):
+			return candidate
+	return &""
+
+func _can_enemy_use_action(action_id: StringName, action_infusion: float) -> bool:
+	if _get_action_type(action_id) == "primary":
+		if not attacks.has(action_id) or not state.enemy.has_attack_skill(action_id):
+			return false
+		var selected_attack: AttackDef = attacks[action_id]
+		if not _can_use_attack_with_active_buffs(state.enemy, selected_attack):
+			return false
+		var infusion_cost := int(round(float(state.enemy.max_drawn_ki) * action_infusion * selected_attack.infusion_cap))
+		return state.enemy.stamina >= selected_attack.stamina_cost and state.enemy.drawn_ki >= (selected_attack.ki_cost + infusion_cost)
+
+	if action_id == &"power_up":
+		if not state.enemy.has_utility_skill(&"power_up"):
+			return false
+		return mini(45, mini(state.enemy.stored_ki, state.enemy.max_drawn_ki - state.enemy.drawn_ki)) > 0
+	if action_id == &"transform_form":
+		if not state.enemy.has_utility_skill(&"transform_form"):
+			return false
+		var next_form := _get_next_form_transformation(state.enemy)
+		return next_form != null and next_form.can_activate(state.enemy)
+	if action_id == &"shuten_gate_1":
+		if not state.enemy.has_utility_skill(&"shuten") or not state.enemy.has_transformation_skill(&"shuten_gate_1"):
+			return false
+		if state.enemy.form_level > 0:
+			return false
+		var shuten: TransformationDef = transformations.get(&"shuten_gate_1", null)
+		return shuten != null and shuten.can_activate(state.enemy)
+	return false
 
 func _process_action(actor: FighterStats, target: FighterStats, action_id: StringName, action_infusion: float) -> bool:
 	match action_id:
@@ -330,7 +423,9 @@ func _log(line: String) -> void:
 	ui.append_log(line)
 
 func _refresh_view() -> void:
-	$"../BattleUI/Margin/VBox/Status".text = "Turn %d | Escalation P:%d E:%d" % [state.turn, int(state.player.escalation), int(state.enemy.escalation)]
+	var primary_status := "used" if player_used_primary_action else "ready"
+	var secondary_status := "used" if player_used_secondary_action else "ready"
+	$"../BattleUI/Margin/VBox/Status".text = "Turn %d | P:%s S:%s | Escalation P:%d E:%d" % [state.turn, primary_status, secondary_status, int(state.player.escalation), int(state.enemy.escalation)]
 	$"../BattleUI/Margin/VBox/PlayerStats".text = _fighter_line(state.player)
 	$"../BattleUI/Margin/VBox/EnemyStats".text = _fighter_line(state.enemy)
 	_refresh_debug_overlay()
