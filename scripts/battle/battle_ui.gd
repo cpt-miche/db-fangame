@@ -54,7 +54,9 @@ func _setup_transform_menu() -> void:
 	var popup := transform_menu.get_popup()
 	popup.clear()
 	popup.add_item("Super Saiyan", 0)
-	popup.add_item("Kaioken", 1)
+	popup.add_item("Shuten", 1)
+	popup.add_item("shuten: second gate", 2)
+	popup.add_item("shuten: final gate", 3)
 	popup.id_pressed.connect(_on_transform_option_selected)
 
 func _on_transform_option_selected(id: int) -> void:
@@ -62,7 +64,11 @@ func _on_transform_option_selected(id: int) -> void:
 		0:
 			action_pressed.emit(&"transform_form")
 		1:
-			action_pressed.emit(&"kaioken")
+			action_pressed.emit(&"shuten_gate_1")
+		2:
+			action_pressed.emit(&"shuten_gate_2")
+		3:
+			action_pressed.emit(&"shuten_gate_3")
 
 func _on_infusion_changed(value: float) -> void:
 	infusion_label.text = "%d%%" % int(value)

@@ -62,7 +62,7 @@ func _rest_outside_battle() -> void:
 	battle_controller.player_base.stamina = battle_controller.player_base.max_stamina
 	battle_controller.player_base.form_level = battle_controller.player_base.base_form_override_level
 	battle_controller.player_base.highest_form_rewarded_this_rest = battle_controller.player_base.base_form_override_level
-	battle_controller.player_base.kaioken_active = false
+	battle_controller.player_base.active_shuten_transformation_id = &""
 	_refresh_stat_screen()
 
 func _eat_outside_battle() -> void:

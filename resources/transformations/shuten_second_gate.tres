@@ -4,14 +4,14 @@
 
 [resource]
 script = ExtResource("1")
-id = &"shuten_gate_1"
-label = "Shuten"
+id = &"shuten_gate_2"
+label = "shuten: second gate"
 is_form_transformation = false
 is_toggle_transformation = true
-required_hp_pct = 0.1
-required_stamina_pct = 0.15
-strength_multiplier = 2.0
-speed_multiplier = 2.0
-hp_upkeep_pct = 0.01
-stamina_upkeep_pct = 0.06
-drawn_ki_upkeep_pct = 0.0
+required_hp_pct = 0.2
+required_stamina_pct = 0.2
+strength_multiplier = 3.0
+speed_multiplier = 3.0
+hp_upkeep_pct = 0.02
+stamina_upkeep_pct = 0.1
+drawn_ki_upkeep_pct = 0.05

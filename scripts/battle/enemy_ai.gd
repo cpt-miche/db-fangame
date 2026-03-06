@@ -7,8 +7,8 @@ func _can_use_attack(enemy: FighterStats, attack: AttackDef, infusion_ratio: flo
 		return false
 	if attack.required_transformation_id == &"":
 		return true
-	if attack.required_transformation_id == &"kaioken":
-		return enemy.kaioken_active
+	if attack.required_transformation_id.begins_with("shuten_gate_"):
+		return enemy.active_shuten_transformation_id == attack.required_transformation_id
 	return enemy.active_form_transformation_id == attack.required_transformation_id
 
 func _has_attack(enemy: FighterStats, attack_id: StringName, attacks: Dictionary) -> bool:
@@ -34,8 +34,8 @@ func choose_action(enemy: FighterStats, attacks: Dictionary, transformations: Di
 		return &"power_up"
 	if _can_transform(enemy, transformations):
 		return &"transform_form"
-	if enemy.form_level == 0 and not enemy.kaioken_active and enemy.hp < 220 and enemy.stamina > 60 and enemy.has_utility_skill(&"kaioken") and enemy.has_transformation_skill(&"kaioken"):
-		return &"kaioken"
+	if enemy.form_level == 0 and enemy.active_shuten_transformation_id == &"" and enemy.hp < 220 and enemy.stamina > 60 and enemy.has_utility_skill(&"shuten") and enemy.has_transformation_skill(&"shuten_gate_1"):
+		return &"shuten_gate_1"
 
 	var roll := randf()
 	if roll < 0.35 and _has_attack(enemy, &"strike", attacks) and _can_use_attack(enemy, attacks[&"strike"], infusion_ratio):

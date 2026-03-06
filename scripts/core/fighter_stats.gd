@@ -20,14 +20,14 @@ extends Resource
 @export var speed: int = 46
 
 @export var attack_skill_ids: PackedStringArray = PackedStringArray([&"strike", &"ki_blast", &"ki_volley", &"ki_barrage"])
-@export var utility_skill_ids: PackedStringArray = PackedStringArray([&"power_up", &"transform_form", &"kaioken"])
-@export var transformation_skill_ids: PackedStringArray = PackedStringArray([&"ss1", &"kaioken"])
+@export var utility_skill_ids: PackedStringArray = PackedStringArray([&"power_up", &"transform_form", &"shuten"])
+@export var transformation_skill_ids: PackedStringArray = PackedStringArray([&"ss1", &"shuten_gate_1", &"shuten_gate_2", &"shuten_gate_3"])
 
 @export_range(0, 5, 1) var base_form_override_level: int = 0
 @export_range(0, 5, 1) var form_mastery_level: int = 0
 
 var escalation: float = 0.0
-var kaioken_active: bool = false
+var active_shuten_transformation_id: StringName = &""
 var form_level: int = 0
 var highest_form_rewarded_this_rest: int = 0
 var active_form_transformation_id: StringName = &""

@@ -1,8 +1,8 @@
 class_name TransformationDef
 extends Resource
 
-@export var id: StringName = &"kaioken"
-@export var label: String = "Kaioken"
+@export var id: StringName = &"shuten_gate_1"
+@export var label: String = "Shuten"
 
 @export var is_form_transformation: bool = false
 @export var is_toggle_transformation: bool = true
