@@ -1,6 +1,8 @@
 extends Node
 
 const DialogueRunnerScript = preload("res://scripts/dialogue/dialogue_runner.gd")
+const DialoguePresenterScript = preload("res://scripts/dialogue/dialogue_presenter.gd")
+const SpeakerRegistryScript = preload("res://scripts/dialogue/speaker_registry.gd")
 const MainGameStateQuery = preload("res://scripts/main/main_game_state_query.gd")
 
 enum GameState {
@@ -28,13 +30,42 @@ var enemy_map := {
 	&"frieza": preload("res://resources/fighters/frieza.tres"),
 }
 
+var speaker_registry_data := {
+	&"player": {
+		"display_name": "You",
+		"side": "player",
+		"default_portrait": preload("res://assets/sprites/player/player_talk.png"),
+	},
+	&"player_fight": {
+		"display_name": "You",
+		"side": "player",
+		"default_portrait": preload("res://assets/sprites/player/player_fight.png"),
+	},
+	&"martial_artist": {
+		"display_name": "Martial Artist",
+		"side": "npc",
+		"default_portrait": preload("res://assets/sprites/enemies/martial_artist_talk.png"),
+	},
+	&"martial_artist_battle": {
+		"display_name": "Martial Artist",
+		"side": "npc",
+		"default_portrait": preload("res://assets/sprites/enemies/martial_artist_fight.png"),
+	},
+	&"raditz": {
+		"display_name": "Raditz",
+		"side": "npc",
+		"default_portrait": preload("res://assets/sprites/enemies/raditz_idle.svg"),
+	},
+}
+
 var dialogue_data := {
 	&"martial_artist_intro": {
 		"start": "intro_1",
-		"npc_portrait": preload("res://assets/sprites/enemies/martial_artist_talk.png"),
+		"player_speaker_id": "player",
+		"npc_speaker_id": "martial_artist",
 		"nodes": {
-			"intro_1": {"type": "line", "speaker": "Martial Artist", "side": "npc", "text": "Hey. You move like someone who's trained hard.", "next": "intro_2"},
-			"intro_2": {"type": "line", "speaker": "You", "side": "player", "text": "I train to protect people, not to show off.", "next": "intro_3"},
+			"intro_1": {"type": "line", "speaker_id": "martial_artist", "text": "Hey. You move like someone who's trained hard.", "next": "intro_2"},
+			"intro_2": {"type": "line", "speaker_id": "player", "text": "I train to protect people, not to show off.", "next": "intro_3"},
 			"intro_3": {
 				"type": "choice",
 				"choices": [
@@ -42,14 +73,13 @@ var dialogue_data := {
 					{"text": "Only if this helps my training.", "next": "ask_training", "set_flags": {"took_training_path": true}},
 				],
 			},
-			"ask_training": {"type": "line", "speaker": "Martial Artist", "side": "npc", "text": "A focused spar always helps.", "next": "accept"},
+			"ask_training": {"type": "line", "speaker_id": "martial_artist", "text": "A focused spar always helps.", "next": "accept"},
 			"accept": {
 				"type": "line",
-				"speaker": "Martial Artist",
-				"side": "npc",
+				"speaker_id": "martial_artist_battle",
 				"text": "Good answer. Let's test your fundamentals in a spar.",
-				"player_portrait": preload("res://assets/sprites/player/player_fight.png"),
-				"npc_portrait": preload("res://assets/sprites/enemies/martial_artist_fight.png"),
+				"player_speaker_id": "player_fight",
+				"npc_speaker_id": "martial_artist_battle",
 				"next": "start_battle",
 			},
 			"start_battle": {"type": "event", "action": "request_battle"},
@@ -57,7 +87,8 @@ var dialogue_data := {
 	},
 	&"raditz_intro": {
 		"start": "check_victory",
-		"npc_portrait": preload("res://assets/sprites/enemies/raditz_idle.svg"),
+		"player_speaker_id": "player",
+		"npc_speaker_id": "raditz",
 		"nodes": {
 			"check_victory": {
 				"type": "condition",
@@ -65,16 +96,14 @@ var dialogue_data := {
 				"true_next": "rematch_line",
 				"false_next": "intro_1",
 			},
-			"intro_1": {"type": "line", "speaker": "Raditz", "side": "npc", "text": "Kakarot's weakling friend? You're in my way.", "next": "intro_2"},
-			"intro_2": {"type": "line", "speaker": "You", "side": "player", "text": "I'm done letting raiders run this place.", "next": "intro_3"},
-			"intro_3": {"type": "line", "speaker": "Raditz", "side": "npc", "text": "Show me if you've got Saiyan blood to back that up.", "next": "battle_event"},
-			"rematch_line": {"type": "line", "speaker": "Raditz", "side": "npc", "text": "You again? Then prove the first win wasn't luck.", "next": "battle_event"},
+			"intro_1": {"type": "line", "speaker_id": "raditz", "text": "Kakarot's weakling friend? You're in my way.", "next": "intro_2"},
+			"intro_2": {"type": "line", "speaker_id": "player", "text": "I'm done letting raiders run this place.", "next": "intro_3"},
+			"intro_3": {"type": "line", "speaker_id": "raditz", "text": "Show me if you've got Saiyan blood to back that up.", "next": "battle_event"},
+			"rematch_line": {"type": "line", "speaker_id": "raditz", "text": "You again? Then prove the first win wasn't luck.", "next": "battle_event"},
 			"battle_event": {"type": "event", "action": "request_battle"},
 		},
 	},
 }
-
-var player_dialogue_portrait: Texture2D = preload("res://assets/sprites/player/player_talk.png")
 
 var active_enemy_id: StringName = &""
 var current_state: GameState = GameState.WORLD
@@ -83,6 +112,7 @@ var _dialogue_runner: Node
 var _quest_flags: Dictionary = {}
 var _victories: Dictionary = {}
 var _inventory: Dictionary = {}
+var _dialogue_presenter: RefCounted
 
 func _ready() -> void:
 	world.encounter_requested.connect(_on_encounter_requested)
@@ -104,6 +134,9 @@ func _setup_dialogue_runner() -> void:
 	_dialogue_runner.dialogue_completed.connect(_on_dialogue_completed)
 	_dialogue_runner.battle_requested.connect(_on_dialogue_battle_requested)
 	_dialogue_runner.set_state_query(MainGameStateQuery.new(_quest_flags, _victories, _inventory))
+	var speaker_registry: RefCounted = SpeakerRegistryScript.new()
+	speaker_registry.configure(speaker_registry_data)
+	_dialogue_presenter = DialoguePresenterScript.new(speaker_registry)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if current_state == GameState.DIALOGUE:
@@ -173,11 +206,8 @@ func _start_optional_dialogue(enemy_id: StringName, dialogue_key: StringName, di
 		_start_battle(enemy_id)
 		return
 
-	var npc_portrait: Texture2D = entry.get("npc_portrait", null)
-	if npc_portrait == null:
-		npc_portrait = player_dialogue_portrait
-
-	dialogue_box.open_dialogue(player_dialogue_portrait, npc_portrait)
+	var defaults: Dictionary = _dialogue_presenter.begin_dialogue(entry)
+	dialogue_box.open_dialogue(defaults.get("player_portrait", null), defaults.get("npc_portrait", null))
 	_set_state(GameState.DIALOGUE)
 	_dialogue_runner.start(entry, {
 		"enemy_id": enemy_id,
@@ -185,7 +215,7 @@ func _start_optional_dialogue(enemy_id: StringName, dialogue_key: StringName, di
 	})
 
 func _on_dialogue_line_ready(line: Dictionary) -> void:
-	dialogue_box.display_line(line)
+	dialogue_box.display_line(_dialogue_presenter.present_line(line))
 
 func _on_dialogue_choices_ready(choices: Array) -> void:
 	dialogue_box.display_choices(choices)
