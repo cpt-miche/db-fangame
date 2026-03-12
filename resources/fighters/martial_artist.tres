@@ -5,17 +5,17 @@
 [resource]
 script = ExtResource("1")
 fighter_name = "Martial Artist"
-max_hp = 400
-hp = 400
-max_stamina = 160
-stamina = 160
+max_hp = 500
+hp = 500
+max_stamina = 300
+stamina = 300
 max_stored_ki = 0
 stored_ki = 0
 max_drawn_ki = 0
 drawn_ki = 0
-physical_strength = 30
+physical_strength = 35
 ki_strength = 0
-speed = 30
+speed = 70
 attack_skill_ids = PackedStringArray("strike")
 utility_skill_ids = PackedStringArray()
 transformation_skill_ids = PackedStringArray()
