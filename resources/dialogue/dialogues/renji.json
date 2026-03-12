@@ -19,7 +19,7 @@
         },
         "intro_3": {
           "type": "line",
-          "speaker_id": "renji",
+          "speaker_id": "renji_fight",
           "text": "A little bird told me. So what do you say? A quick sparring match?",
           "next": "intro_4"
         },        
