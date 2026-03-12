@@ -21,6 +21,7 @@ func start(dialogue_schema: Dictionary, context: Dictionary = {}) -> void:
 	_dialogue_nodes = dialogue_schema.get("nodes", {})
 	_context = context.duplicate(true)
 	current_choices = []
+	flags = {}
 	_running = true
 
 	var start_node: StringName = StringName(dialogue_schema.get("start", &""))
