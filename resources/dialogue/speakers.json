@@ -15,7 +15,7 @@
       "side": "npc",
       "default_portrait": "res://assets/sprites/enemies/martial_artist_talk.png"
     },
-    "martial_artist_battle": {
+    "martial_artist_fight": {
       "display_name": "Martial Artist",
       "side": "npc",
       "default_portrait": "res://assets/sprites/enemies/martial_artist_fight.png"
