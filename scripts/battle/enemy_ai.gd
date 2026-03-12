@@ -27,6 +27,27 @@ func _can_transform(enemy: FighterStats, transformations: Dictionary) -> bool:
 			return true
 	return false
 
+func _choose_transformation_action(enemy: FighterStats, transformations: Dictionary) -> StringName:
+	if enemy.has_utility_skill(&"shuten") and enemy.form_level == 0:
+		var best_shuten_id: StringName = &""
+		var best_shuten_level: int = -1
+		for id in enemy.transformation_skill_ids:
+			if not String(id).begins_with("shuten_gate_"):
+				continue
+			if id == enemy.active_shuten_transformation_id:
+				continue
+			var transform: TransformationDef = transformations.get(id, null)
+			if transform == null or not transform.can_activate(enemy):
+				continue
+			if transform.form_level > best_shuten_level:
+				best_shuten_level = transform.form_level
+				best_shuten_id = id
+		if best_shuten_id != &"":
+			return best_shuten_id
+
+	if _can_transform(enemy, transformations):
+		return &"transform_form"
+	return &""
 
 func _should_use_enrage(enemy: FighterStats) -> bool:
 	if not enemy.has_utility_skill(&"enrage"):
@@ -41,6 +62,10 @@ func _should_use_enrage(enemy: FighterStats) -> bool:
 	return false
 
 func choose_action(enemy: FighterStats, attacks: Dictionary, transformations: Dictionary, infusion_ratio: float = 0.0) -> StringName:
+	var transformation_action := _choose_transformation_action(enemy, transformations)
+	if transformation_action != &"":
+		return transformation_action
+
 	var low_ki := enemy.drawn_ki < 30
 
 	if low_ki and enemy.stored_ki > 20 and enemy.has_utility_skill(&"power_up"):
