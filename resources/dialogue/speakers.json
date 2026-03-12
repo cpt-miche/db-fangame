@@ -19,11 +19,6 @@
       "display_name": "Martial Artist",
       "side": "npc",
       "default_portrait": "res://assets/sprites/enemies/martial_artist_fight.png"
-    },
-    "raditz": {
-      "display_name": "Raditz",
-      "side": "npc",
-      "default_portrait": "res://assets/sprites/enemies/raditz_idle.svg"
     }
   }
 }

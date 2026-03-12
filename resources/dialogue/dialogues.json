@@ -82,72 +82,7 @@
           "type": "end"
         }
       }
-    },
-    "raditz_intro": {
-      "start": "check_victory",
-      "player_speaker_id": "player",
-      "npc_speaker_id": "raditz",
-      "nodes": {
-        "check_victory": {
-          "type": "condition",
-          "check": {
-            "kind": "prior_victory",
-            "id": "raditz_scout"
-          },
-          "true_next": "rematch_line",
-          "false_next": "intro_1"
-        },
-        "intro_1": {
-          "type": "line",
-          "speaker_id": "raditz",
-          "text_key": "dlg.raditz_intro.intro_1",
-          "next": "intro_2"
-        },
-        "intro_2": {
-          "type": "line",
-          "speaker_id": "player",
-          "text_key": "dlg.raditz_intro.intro_2",
-          "next": "intro_3"
-        },
-        "intro_3": {
-          "type": "line",
-          "speaker_id": "raditz",
-          "text_key": "dlg.raditz_intro.intro_3",
-          "next": "battle_event"
-        },
-        "rematch_line": {
-          "type": "line",
-          "speaker_id": "raditz",
-          "text_key": "dlg.raditz_intro.rematch_line",
-          "next": "battle_event"
-        },
-        "battle_event": {
-          "type": "event",
-          "action": "request_battle"
-        }
-      }
     }
   },
-  "scenes": {
-    "raditz_linear_intro_simple": {
-      "player_speaker_id": "player",
-      "npc_speaker_id": "raditz",
-      "lines": [
-        {
-          "speaker_id": "raditz",
-          "text": "Scouter says your power level is laughable."
-        },
-        {
-          "speaker_id": "player",
-          "text": "Then come test it."
-        },
-        {
-          "speaker_id": "raditz",
-          "text": "Heh. I was hoping you'd say that."
-        }
-      ],
-      "end_action": "request_battle",
-      "enemy_id": "raditz_scout"
-    }
-  }
+  "scenes": {}
 }

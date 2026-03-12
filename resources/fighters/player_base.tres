@@ -18,4 +18,4 @@ ki_strength = 50
 speed = 46
 attack_skill_ids = PackedStringArray("strike", "ki_blast", "ki_volley", "ki_barrage")
 utility_skill_ids = PackedStringArray("power_up", "transform_form", "shuten")
-transformation_skill_ids = PackedStringArray("ss1", "shuten_gate_1", "shuten_gate_2", "shuten_gate_3")
+transformation_skill_ids = PackedStringArray("godwake", "shuten_gate_1", "shuten_gate_2", "shuten_gate_3")

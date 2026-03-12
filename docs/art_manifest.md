@@ -14,16 +14,16 @@
 - `player_ki_blast.png`
 - `player_hurt.png`
 - `player_ko.png`
-- `player_kaioken.png`
+- `player_shuten.png`
 
 ### Enemy (`assets/sprites/enemies/`)
-- `raditz_idle.png`
-- `raditz_walk_01.png` to `raditz_walk_04.png`
-- `raditz_strike.png`
-- `raditz_ki_blast.png`
-- `raditz_hurt.png`
-- `raditz_ko.png`
-- `raditz_kaioken.png`
+- `enemy_idle.png`
+- `enemy_walk_01.png` to `enemy_walk_04.png`
+- `enemy_strike.png`
+- `enemy_ki_blast.png`
+- `enemy_hurt.png`
+- `enemy_ko.png`
+- `enemy_shuten.png`
 
 ## Backgrounds (`assets/backgrounds/`)
 - `world_plains_layer_1.png`

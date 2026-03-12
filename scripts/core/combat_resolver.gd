@@ -17,7 +17,7 @@ const LOG2 := log(2.0)
 
 const FORM_DR_BONUS := {
 	0: 0.00, # Base
-	1: 0.15, # SS1
+	1: 0.15, # Godwake
 	2: 0.20, # SS2
 	3: 0.30, # SS3
 	4: 0.35, # SSGod
@@ -100,7 +100,7 @@ func resolve_attack(attacker: FighterStats, defender: FighterStats, attack: Atta
 	attacker.drawn_ki -= attack.ki_cost + infusion_cost
 
 	# `attacker.speed` already includes active transformation scaling from battle_controller.
-	# Avoid applying transformation speed here again, or Kaioken users are double-counted.
+	# Avoid applying transformation speed here again, or Shuten users are double-counted.
 	var effective_attacker_speed := attacker.speed
 	var speed_hit_chance := get_hit_chance_from_speed(effective_attacker_speed, defender.speed)
 	var speed_hit_delta := speed_hit_chance - HIT_CHANCE_BASE

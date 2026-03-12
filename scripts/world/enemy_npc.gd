@@ -1,6 +1,6 @@
 extends Area2D
 
-@export var enemy_id: StringName = &"raditz_scout"
+@export var enemy_id: StringName = &"martial_artist"
 @export var display_name: String = "Enemy"
 @export var trigger_dialogue: bool = false
 @export var dialogue_key: StringName = &""
