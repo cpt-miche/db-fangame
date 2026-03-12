@@ -34,7 +34,7 @@
           "speaker_id": "martial_artist",
           "text": "Is that so? Because I've heard he's been going easy on you. I guess the old man's going soft.",
           "next": "intro_6"
-        }
+        },
         "intro_6": {
           "type": "line",
           "speaker_id": "player",
@@ -56,7 +56,7 @@
             },
             {
               "text_key": "No, not right now",
-              "next": "decline_training",
+              "next": "decline_training"
             }
           ]
         },
@@ -77,9 +77,10 @@
         "start_battle": {
           "type": "event",
           "action": "request_battle"
-        }
+        },
         "leave": {
           "type": "end"
+        }
       }
     },
     "raditz_intro": {
