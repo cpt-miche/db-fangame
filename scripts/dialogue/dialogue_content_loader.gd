@@ -21,7 +21,101 @@ func load_dialogues(path: String = "%s/dialogues.json" % DIALOGUE_DIR) -> Dictio
 		var parsed_sequence := _parse_dialogue_sequence(path, dialogue_id, raw_dialogues[dialogue_id_variant])
 		if parsed_sequence != null:
 			output[dialogue_id] = parsed_sequence
+
+	var raw_scenes := parsed.get("scenes", {})
+	if raw_scenes is Dictionary:
+		for scene_id_variant: Variant in raw_scenes.keys():
+			var scene_id := StringName(scene_id_variant)
+			if output.has(scene_id):
+				_add_error(path, "Duplicate dialogue id '%s' found in both 'dialogues' and 'scenes'." % String(scene_id))
+				continue
+			var scene_sequence := _parse_linear_scene(path, scene_id, raw_scenes[scene_id_variant])
+			if scene_sequence != null:
+				output[scene_id] = scene_sequence
+	elif parsed.has("scenes"):
+		_add_error(path, "Expected 'scenes' to be a Dictionary.")
+
 	return output
+
+func _parse_linear_scene(path: String, scene_id: StringName, raw_value: Variant) -> DialogueSequence:
+	if raw_value is not Dictionary:
+		_add_error(path, "Scene '%s' must be a Dictionary." % String(scene_id))
+		return null
+
+	var source: Dictionary = raw_value
+	var raw_lines := source.get("lines", [])
+	if raw_lines is not Array or raw_lines.is_empty():
+		_add_error(path, "Scene '%s' must define a non-empty 'lines' Array." % String(scene_id))
+		return null
+
+	var sequence := DialogueSequence.new()
+	sequence.id = scene_id
+	sequence.player_speaker_id = StringName(source.get("player_speaker_id", &""))
+	sequence.npc_speaker_id = StringName(source.get("npc_speaker_id", &""))
+	sequence.player_portrait = source.get("player_portrait", null)
+	sequence.npc_portrait = source.get("npc_portrait", null)
+
+	var line_index: int = 0
+	var previous_node_id: StringName = &""
+	for raw_line: Variant in raw_lines:
+		if raw_line is not Dictionary:
+			_add_error(path, "Scene '%s' line[%d] must be a Dictionary." % [String(scene_id), line_index])
+			line_index += 1
+			continue
+		var line_dict: Dictionary = raw_line
+		var node_id := StringName("line_%d" % [line_index + 1])
+		var node := DialogueNode.new()
+		node.id = node_id
+		node.node_type = &"line"
+		node.speaker_id = StringName(line_dict.get("speaker_id", &""))
+		node.speaker = String(line_dict.get("speaker", ""))
+		node.side = String(line_dict.get("side", ""))
+		node.text = String(line_dict.get("text", ""))
+		node.text_key = StringName(line_dict.get("text_key", &""))
+		node.player_speaker_id = StringName(line_dict.get("player_speaker_id", &""))
+		node.npc_speaker_id = StringName(line_dict.get("npc_speaker_id", &""))
+		node.player_portrait = line_dict.get("player_portrait", null)
+		node.npc_portrait = line_dict.get("npc_portrait", null)
+
+		if node.speaker_id == &"":
+			_add_error(path, "Scene '%s' line[%d] is missing 'speaker_id'." % [String(scene_id), line_index])
+		if node.text == "" and node.text_key == &"":
+			_add_error(path, "Scene '%s' line[%d] must define either 'text' or 'text_key'." % [String(scene_id), line_index])
+
+		sequence.nodes[node_id] = node
+		if line_index == 0:
+			sequence.start_node_id = node_id
+		if previous_node_id != &"" and sequence.nodes.has(previous_node_id):
+			var previous_node: DialogueNode = sequence.nodes[previous_node_id]
+			previous_node.next_node_id = node_id
+		previous_node_id = node_id
+		line_index += 1
+
+	if sequence.start_node_id == &"":
+		_add_error(path, "Scene '%s' has no valid lines to build nodes." % String(scene_id))
+		return null
+
+	var end_action := StringName(source.get("end_action", &""))
+	if end_action != &"":
+		var event_node := DialogueNode.new()
+		event_node.id = &"scene_event"
+		event_node.node_type = &"event"
+		event_node.action = end_action
+		event_node.enemy_id = StringName(source.get("enemy_id", &""))
+		sequence.nodes[event_node.id] = event_node
+		if previous_node_id != &"" and sequence.nodes.has(previous_node_id):
+			var last_line: DialogueNode = sequence.nodes[previous_node_id]
+			last_line.next_node_id = event_node.id
+	else:
+		var end_node := DialogueNode.new()
+		end_node.id = &"scene_end"
+		end_node.node_type = &"end"
+		sequence.nodes[end_node.id] = end_node
+		if previous_node_id != &"" and sequence.nodes.has(previous_node_id):
+			var final_line: DialogueNode = sequence.nodes[previous_node_id]
+			final_line.next_node_id = end_node.id
+
+	return sequence
 
 func load_speakers(path: String = "%s/speakers.json" % DIALOGUE_DIR) -> Dictionary:
 	var parsed := _load_json(path)
@@ -158,7 +252,10 @@ func _parse_condition(path: String, dialogue_id: StringName, node_id: StringName
 	condition.id = StringName(source.get("id", &""))
 	if condition.kind == &"":
 		_add_error(path, "Dialogue '%s' node '%s' condition is missing 'kind'." % [String(dialogue_id), String(node_id)])
-	if condition.id == &"":
+	var kinds_without_id := {
+		&"prior_victory_current_enemy": true,
+	}
+	if condition.id == &"" and not kinds_without_id.has(condition.kind):
 		_add_error(path, "Dialogue '%s' node '%s' condition is missing 'id'." % [String(dialogue_id), String(node_id)])
 	return condition
 

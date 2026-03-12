@@ -97,5 +97,27 @@
         }
       }
     }
+  },
+  "scenes": {
+    "raditz_linear_intro_simple": {
+      "player_speaker_id": "player",
+      "npc_speaker_id": "raditz",
+      "lines": [
+        {
+          "speaker_id": "raditz",
+          "text": "Scouter says your power level is laughable."
+        },
+        {
+          "speaker_id": "player",
+          "text": "Then come test it."
+        },
+        {
+          "speaker_id": "raditz",
+          "text": "Heh. I was hoping you'd say that."
+        }
+      ],
+      "end_action": "request_battle",
+      "enemy_id": "raditz_scout"
+    }
   }
 }

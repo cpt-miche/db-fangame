@@ -22,6 +22,7 @@ position = Vector2(320, 240)
 position = Vector2(480, 220)
 enemy_id = &"martial_artist"
 display_name = "Martial Artist"
+despawn_on_defeat = false
 trigger_dialogue = true
 dialogue_key = &"martial_artist_intro"
 
@@ -29,11 +30,13 @@ dialogue_key = &"martial_artist_intro"
 position = Vector2(600, 220)
 enemy_id = &"saibaman"
 display_name = "Saibaman"
+despawn_on_defeat = false
 
 [node name="RaditzNPC" parent="Enemies" instance=ExtResource("3")]
 position = Vector2(540, 320)
 enemy_id = &"raditz_scout"
 display_name = "Raditz (Scout)"
+despawn_on_defeat = false
 trigger_dialogue = true
 dialogue_key = &"raditz_intro"
 
@@ -41,11 +44,13 @@ dialogue_key = &"raditz_intro"
 position = Vector2(700, 300)
 enemy_id = &"frieza_force"
 display_name = "Frieza Force"
+despawn_on_defeat = false
 
 [node name="FriezaNPC" parent="Enemies" instance=ExtResource("3")]
 position = Vector2(760, 210)
 enemy_id = &"frieza"
 display_name = "Frieza"
+despawn_on_defeat = false
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(640, 360)

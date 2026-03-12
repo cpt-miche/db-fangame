@@ -4,6 +4,7 @@ extends Area2D
 @export var display_name: String = "Enemy"
 @export var trigger_dialogue: bool = false
 @export var dialogue_key: StringName = &""
+@export var despawn_on_defeat: bool = true
 
 @onready var name_label: Label = $NameLabel
 
