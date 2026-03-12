@@ -53,10 +53,10 @@ func clear_log() -> void:
 func _setup_transform_menu() -> void:
 	var popup := transform_menu.get_popup()
 	popup.clear()
-	popup.add_item("Super Saiyan", 0)
+	popup.add_item("Godwake", 0)
 	popup.add_item("Shuten", 1)
-	popup.add_item("shuten: second gate", 2)
-	popup.add_item("shuten: final gate", 3)
+	popup.add_item("Shuten: Second Gate", 2)
+	popup.add_item("Shuten: Final Gate", 3)
 	popup.id_pressed.connect(_on_transform_option_selected)
 
 func _on_transform_option_selected(id: int) -> void:

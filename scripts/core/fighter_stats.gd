@@ -21,7 +21,7 @@ extends Resource
 
 @export var attack_skill_ids: PackedStringArray = PackedStringArray([&"strike", &"ki_blast", &"ki_volley", &"ki_barrage"])
 @export var utility_skill_ids: PackedStringArray = PackedStringArray([&"power_up", &"transform_form", &"shuten"])
-@export var transformation_skill_ids: PackedStringArray = PackedStringArray([&"ss1", &"shuten_gate_1", &"shuten_gate_2", &"shuten_gate_3"])
+@export var transformation_skill_ids: PackedStringArray = PackedStringArray([&"godwake", &"shuten_gate_1", &"shuten_gate_2", &"shuten_gate_3"])
 
 @export_range(0, 5, 1) var base_form_override_level: int = 0
 @export_range(0, 5, 1) var form_mastery_level: int = 0

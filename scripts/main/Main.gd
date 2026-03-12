@@ -26,10 +26,6 @@ enum GameState {
 
 var enemy_map := {
 	&"martial_artist": preload("res://resources/fighters/martial_artist.tres"),
-	&"saibaman": preload("res://resources/fighters/saibaman.tres"),
-	&"raditz_scout": preload("res://resources/fighters/raditz_scout.tres"),
-	&"frieza_force": preload("res://resources/fighters/frieza_force.tres"),
-	&"frieza": preload("res://resources/fighters/frieza.tres"),
 }
 
 var speaker_registry_data: Dictionary = {}

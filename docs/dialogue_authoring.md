@@ -11,7 +11,7 @@ Dialogue content is data-driven under `resources/dialogue/`.
 ## Naming Conventions
 
 - **Speaker IDs**: `snake_case`, stable identifiers (e.g. `martial_artist_battle`).
-- **Dialogue IDs**: `<encounter>_intro` style (e.g. `raditz_intro`).
+- **Dialogue IDs**: `<encounter>_intro` style (e.g. `martial_artist_intro`).
 - **Node IDs**: short local IDs in a dialogue (`intro_1`, `battle_event`, `check_victory`).
 - **Text keys**: `dlg.<dialogue_id>.<node_or_choice_id>`.
 
@@ -24,13 +24,13 @@ Each scene is automatically converted into nodes at load-time, so you only write
 ```json
 {
   "scenes": {
-    "raditz_linear_intro": {
+    "martial_artist_linear_intro": {
       "player_speaker_id": "player",
-      "npc_speaker_id": "raditz",
+      "npc_speaker_id": "martial_artist",
       "lines": [
         {
-          "speaker_id": "raditz",
-          "npc_portrait": "res://assets/portraits/raditz_angry.png",
+          "speaker_id": "martial_artist",
+          "npc_portrait": "res://assets/portraits/martial_artist_angry.png",
           "text": "So this is Earth? Pathetic."
         },
         {
@@ -67,7 +67,7 @@ Use the scene key as your NPC `dialogue_key` in `WorldIso.tscn`/`enemy_npc.gd` c
 - `condition`
   - Required: `check`, `true_next`, `false_next`.
   - `check.kind` examples:
-    - `prior_victory` with `id` set to an enemy id (`raditz_scout`).
+    - `prior_victory` with `id` set to an enemy id (`martial_artist`).
     - `prior_victory_current_enemy` (no `id` needed; uses the current encounter enemy).
 - `event`
   - Required: `action`.
@@ -86,8 +86,8 @@ Example:
 ```json
 {
   "type": "line",
-  "speaker_id": "raditz",
-  "text_key": "dlg.raditz_intro.intro_1",
+  "speaker_id": "martial_artist",
+  "text_key": "dlg.martial_artist_intro.intro_1",
   "next": "intro_2"
 }
 ```
@@ -97,7 +97,7 @@ Localization entries live in `resources/dialogue/localization/en.json`:
 ```json
 {
   "entries": {
-    "dlg.raditz_intro.intro_1": "Kakarot's weakling friend? You're in my way."
+    "dlg.martial_artist_intro.intro_1": "Hey. You move like someone who's trained hard."
   }
 }
 ```

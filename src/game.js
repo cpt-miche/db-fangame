@@ -41,63 +41,9 @@ const enemyRoster = [
     ki: 0,
     speed: 34,
     canUseKi: false,
-    canKaioken: false,
+    canShuten: false,
     strengthLabel: 'Very Weak'
   },
-  {
-    name: 'Saibaman',
-    tag: 'SAIBAMAN',
-    maxHp: 390,
-    hp: 390,
-    maxStamina: 230,
-    stamina: 230,
-    maxStoredKi: 160,
-    storedKi: 160,
-    maxDrawnKi: 140,
-    drawnKi: 70,
-    physical: 48,
-    ki: 36,
-    speed: 39,
-    canUseKi: true,
-    canKaioken: false,
-    strengthLabel: 'Weak'
-  },
-  {
-    name: 'Raditz (Scout)',
-    tag: 'RADITZ',
-    maxHp: 450,
-    hp: 450,
-    maxStamina: 240,
-    stamina: 240,
-    maxStoredKi: 360,
-    storedKi: 360,
-    maxDrawnKi: 240,
-    drawnKi: 90,
-    physical: 52,
-    ki: 48,
-    speed: 40,
-    canUseKi: true,
-    canKaioken: false,
-    strengthLabel: 'Medium'
-  },
-  {
-    name: 'Freiza',
-    tag: 'FREIZA',
-    maxHp: 740,
-    hp: 740,
-    maxStamina: 360,
-    stamina: 360,
-    maxStoredKi: 620,
-    storedKi: 620,
-    maxDrawnKi: 420,
-    drawnKi: 220,
-    physical: 86,
-    ki: 94,
-    speed: 76,
-    canUseKi: true,
-    canKaioken: false,
-    strengthLabel: 'Very Strong'
-  }
 ];
 
 const enemyWorlds = enemyRoster.map((enemy, index) => ({
@@ -118,7 +64,7 @@ const baseActions = [
 
 const abilityActions = [
   { key: 'volley', label: 'Ki Volley' },
-  { key: 'transform', label: 'Transform (SS1)' }
+  { key: 'transform', label: 'Transform (Godwake)' }
 ];
 
 const protagonistSkills = [
@@ -126,7 +72,7 @@ const protagonistSkills = [
   { name: 'Ki Blast', attack: 24, staminaCost: 4, kiCost: 22 },
   { name: 'Ki Blast Volley', attack: 34, staminaCost: 8, kiCost: 44 },
   { name: 'Ki Blast Barrage', attack: 50, staminaCost: 12, kiCost: 70 },
-  { name: 'Transform (SS1)', attack: 'Form Buff', staminaCost: '5% max', kiCost: '2% stored' }
+  { name: 'Transform (Godwake)', attack: 'Form Buff', staminaCost: '5% max', kiCost: '2% stored' }
 ];
 
 let activeEscapeTab = 'inventory';
@@ -196,7 +142,7 @@ function makeFighter(name, isPlayer = false) {
     speed: 46,
     escalation: 0,
     guard: false,
-    kaioken: false,
+    shuten: false,
     formLevel: 0,
     roundDrain: { hp: 0, stamina: 0, drawnKi: 0 }
   };
@@ -341,7 +287,7 @@ function applyAttack(attacker, defender, cfg) {
   attacker.stamina -= staminaCost;
   attacker.drawnKi -= kiCost + infusionCost;
 
-  const speedBoost = attacker.kaioken ? 2 : 1;
+  const speedBoost = attacker.shuten ? 2 : 1;
   const boostedSpeed = attacker.speed * speedBoost;
   const hitChance = clamp(
     cfg.baseHit + (boostedSpeed - defender.speed) * 0.006 + infusionPct * 0.08 - (defender.guard ? 0.14 : 0),
@@ -357,7 +303,7 @@ function applyAttack(attacker, defender, cfg) {
   if (cfg.canVanish && tryVanish(attacker, defender, cfg.tier)) return true;
 
   const suppression = 1 - getSuppression(attacker);
-  const transBoost = attacker.kaioken ? 2 : 1;
+  const transBoost = attacker.shuten ? 2 : 1;
   const statPower = cfg.type === 'physical' ? attacker.physical : attacker.ki;
   const infusionBoost = 1 + infusionPct * 0.9;
   const raw = (cfg.base + statPower * cfg.scaling) * suppression * transBoost * infusionBoost;
@@ -370,12 +316,12 @@ function applyAttack(attacker, defender, cfg) {
 }
 
 function applyRoundDrain(fighter) {
-  if (!fighter.kaioken) return;
+  if (!fighter.shuten) return;
   const hpUpkeep = Math.round(fighter.maxHp * 0.01);
   const staminaUpkeep = Math.round(fighter.maxStamina * 0.06);
   fighter.hp -= hpUpkeep;
   fighter.stamina -= staminaUpkeep;
-  addLog(`${fighter.name}'s Kaioken upkeep: -${hpUpkeep} HP, -${staminaUpkeep} stamina.`);
+  addLog(`${fighter.name}'s Shuten upkeep: -${hpUpkeep} HP, -${staminaUpkeep} stamina.`);
 }
 
 function consumeAction(type) {
@@ -518,7 +464,7 @@ function playerAction(actionKey) {
         const requiredStamina = Math.ceil(p.maxStamina * 0.05);
         const requiredStoredKi = Math.ceil(p.maxStoredKi * 0.02);
         if (p.stamina < requiredStamina || p.storedKi < requiredStoredKi) {
-          addLog(`SS1 requires at least ${requiredStamina} stamina and ${requiredStoredKi} stored ki.`);
+          addLog(`Godwake requires at least ${requiredStamina} stamina and ${requiredStoredKi} stored ki.`);
           break;
         }
         const prevMaxStamina = p.maxStamina;
@@ -530,7 +476,7 @@ function playerAction(actionKey) {
         p.maxStamina = Math.round(p.maxStamina * 2);
         const staminaMult = p.maxStamina / Math.max(1, prevMaxStamina);
         p.stamina = clamp(Math.round(prevStamina * staminaMult), 0, p.maxStamina);
-        addLog(`${p.name} transforms to SS1! Stamina ${prevStamina}/${prevMaxStamina} -> ${p.stamina}/${p.maxStamina}.`);
+        addLog(`${p.name} transforms to Godwake! Stamina ${prevStamina}/${prevMaxStamina} -> ${p.stamina}/${p.maxStamina}.`);
         executed = true;
       }
       break;
@@ -567,7 +513,7 @@ function enemyTurn() {
     return;
   }
 
-  if (!e.name.startsWith('Raditz') && e.formLevel < 1 && Math.random() < 0.35) {
+  if (e.formLevel < 1 && Math.random() < 0.35) {
     const requiredStamina = Math.ceil(e.maxStamina * 0.05);
     const requiredStoredKi = Math.ceil(e.maxStoredKi * 0.02);
     if (e.stamina >= requiredStamina && e.storedKi >= requiredStoredKi) {
@@ -580,7 +526,7 @@ function enemyTurn() {
       e.maxStamina = Math.round(e.maxStamina * 2);
       const staminaMult = e.maxStamina / Math.max(1, prevMaxStamina);
       e.stamina = clamp(Math.round(prevStamina * staminaMult), 0, e.maxStamina);
-      addLog(`${e.name} transforms to ${e.tag === 'FREIZA' ? 'Frieza Second Form' : 'SS1'}!`);
+      addLog(`${e.name} transforms to Godwake!`);
       return;
     }
   }
@@ -588,15 +534,6 @@ function enemyTurn() {
   if (lowStam && Math.random() < 0.5) {
     e.guard = true;
     addLog(`${e.name} guards and regains footing.`);
-    return;
-  }
-
-  if (e.tag === 'RADITZ' && e.drawnKi >= 68 && e.stamina >= 10 && Math.random() < 0.45) {
-    applyAttack(e, p, {
-      label: 'Double Sunday', type: 'ki', base: 62, scaling: 1.2,
-      baseHit: 0.8, staminaCost: 10, kiCost: 68, infusionCap: 0.45,
-      canVanish: true, tier: 2, escalationGain: 12
-    });
     return;
   }
 
@@ -651,7 +588,7 @@ function renderFighter(f) {
 
   return `
   <div class="card">
-    <strong>${f.name} ${f.formLevel > 0 ? `(Form ${f.formLevel})` : ''} ${f.kaioken ? '(Kaioken)' : ''}</strong>
+    <strong>${f.name} ${f.formLevel > 0 ? `(Form ${f.formLevel})` : ''} ${f.shuten ? '(Shuten)' : ''}</strong>
     ${renderBar('HP', f.hp, f.maxHp)}
     ${renderBar('Stam', f.stamina, f.maxStamina)}
     ${renderBar('Stored Ki', f.storedKi, f.maxStoredKi)}

@@ -25,4 +25,4 @@
   - escalation suppression
   - ki infusion
   - vanish/counter
-  - Kaioken upkeep drain
+  - Shuten upkeep drain
