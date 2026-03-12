@@ -100,9 +100,12 @@ func _step_to_next_node() -> void:
 
 func _emit_line(node: Dictionary) -> void:
 	var line_payload := {
+		"speaker_id": StringName(node.get("speaker_id", &"")),
 		"speaker": String(node.get("speaker", "")),
-		"side": String(node.get("side", "npc")),
+		"side": String(node.get("side", "")),
 		"text": String(node.get("text", "...")),
+		"player_speaker_id": StringName(node.get("player_speaker_id", &"")),
+		"npc_speaker_id": StringName(node.get("npc_speaker_id", &"")),
 		"player_portrait": node.get("player_portrait", null),
 		"npc_portrait": node.get("npc_portrait", null),
 	}

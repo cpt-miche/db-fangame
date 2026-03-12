@@ -36,12 +36,12 @@ func close_dialogue() -> void:
 	panel.visible = false
 	_clear_choices()
 
-func display_line(entry: Dictionary) -> void:
-	speaker_label.text = String(entry.get("speaker", ""))
-	line_label.text = String(entry.get("text", "..."))
-	player_portrait.texture = _resolve_portrait(entry, "player_portrait", _default_player_portrait)
-	npc_portrait.texture = _resolve_portrait(entry, "npc_portrait", _default_npc_portrait)
-	_set_active_side(String(entry.get("side", "npc")))
+func display_line(view_model: Dictionary) -> void:
+	speaker_label.text = String(view_model.get("speaker", ""))
+	line_label.text = String(view_model.get("text", "..."))
+	player_portrait.texture = view_model.get("player_portrait", _default_player_portrait)
+	npc_portrait.texture = view_model.get("npc_portrait", _default_npc_portrait)
+	_set_active_side(String(view_model.get("side", "npc")))
 	continue_label.visible = true
 	_clear_choices()
 
@@ -85,24 +85,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("interact"):
 		emit_signal("continue_requested")
 		get_viewport().set_input_as_handled()
-
-func _resolve_portrait(entry: Dictionary, key: String, fallback: Texture2D) -> Texture2D:
-	if not entry.has(key):
-		return fallback
-
-	var value: Variant = entry.get(key)
-	if value is Texture2D:
-		return value
-
-	if value is String:
-		var path := String(value)
-		if path == "":
-			return fallback
-		var loaded := load(path)
-		if loaded is Texture2D:
-			return loaded
-
-	return fallback
 
 func _set_active_side(side: String) -> void:
 	if side == "player":
