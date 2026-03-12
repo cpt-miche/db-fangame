@@ -10,26 +10,28 @@ func load_dialogues(path: String = "%s/dialogues.json" % DIALOGUE_DIR) -> Dictio
 	if parsed.is_empty():
 		return {}
 
-	var raw_dialogues := parsed.get("dialogues", {})
+	var raw_dialogues: Variant = parsed.get("dialogues", {})
 	if raw_dialogues is not Dictionary:
 		_add_error(path, "Expected 'dialogues' to be a Dictionary.")
 		return {}
+	var raw_dialogues_dict: Dictionary = raw_dialogues
 
 	var output: Dictionary = {}
-	for dialogue_id_variant: Variant in raw_dialogues.keys():
+	for dialogue_id_variant: Variant in raw_dialogues_dict.keys():
 		var dialogue_id := StringName(dialogue_id_variant)
-		var parsed_sequence := _parse_dialogue_sequence(path, dialogue_id, raw_dialogues[dialogue_id_variant])
+		var parsed_sequence := _parse_dialogue_sequence(path, dialogue_id, raw_dialogues_dict[dialogue_id_variant])
 		if parsed_sequence != null:
 			output[dialogue_id] = parsed_sequence
 
-	var raw_scenes := parsed.get("scenes", {})
+	var raw_scenes: Variant = parsed.get("scenes", {})
 	if raw_scenes is Dictionary:
-		for scene_id_variant: Variant in raw_scenes.keys():
+		var raw_scenes_dict: Dictionary = raw_scenes
+		for scene_id_variant: Variant in raw_scenes_dict.keys():
 			var scene_id := StringName(scene_id_variant)
 			if output.has(scene_id):
 				_add_error(path, "Duplicate dialogue id '%s' found in both 'dialogues' and 'scenes'." % String(scene_id))
 				continue
-			var scene_sequence := _parse_linear_scene(path, scene_id, raw_scenes[scene_id_variant])
+			var scene_sequence := _parse_linear_scene(path, scene_id, raw_scenes_dict[scene_id_variant])
 			if scene_sequence != null:
 				output[scene_id] = scene_sequence
 	elif parsed.has("scenes"):
@@ -43,10 +45,11 @@ func _parse_linear_scene(path: String, scene_id: StringName, raw_value: Variant)
 		return null
 
 	var source: Dictionary = raw_value
-	var raw_lines := source.get("lines", [])
+	var raw_lines: Variant = source.get("lines", [])
 	if raw_lines is not Array or raw_lines.is_empty():
 		_add_error(path, "Scene '%s' must define a non-empty 'lines' Array." % String(scene_id))
 		return null
+	var raw_lines_array: Array = raw_lines
 
 	var sequence := DialogueSequence.new()
 	sequence.id = scene_id
@@ -57,7 +60,7 @@ func _parse_linear_scene(path: String, scene_id: StringName, raw_value: Variant)
 
 	var line_index: int = 0
 	var previous_node_id: StringName = &""
-	for raw_line: Variant in raw_lines:
+	for raw_line: Variant in raw_lines_array:
 		if raw_line is not Dictionary:
 			_add_error(path, "Scene '%s' line[%d] must be a Dictionary." % [String(scene_id), line_index])
 			line_index += 1
@@ -149,14 +152,15 @@ func _parse_dialogue_sequence(path: String, dialogue_id: StringName, raw_value: 
 	if sequence.start_node_id == &"":
 		_add_error(path, "Dialogue '%s' is missing a valid 'start' node id." % String(dialogue_id))
 
-	var raw_nodes := source.get("nodes", {})
+	var raw_nodes: Variant = source.get("nodes", {})
 	if raw_nodes is not Dictionary:
 		_add_error(path, "Dialogue '%s' has invalid 'nodes' (expected Dictionary)." % String(dialogue_id))
 		return sequence
+	var raw_nodes_dict: Dictionary = raw_nodes
 
-	for node_id_variant: Variant in raw_nodes.keys():
+	for node_id_variant: Variant in raw_nodes_dict.keys():
 		var node_id := StringName(node_id_variant)
-		var node := _parse_dialogue_node(path, dialogue_id, node_id, raw_nodes[node_id_variant])
+		var node := _parse_dialogue_node(path, dialogue_id, node_id, raw_nodes_dict[node_id_variant])
 		if node != null:
 			sequence.nodes[node_id] = node
 
