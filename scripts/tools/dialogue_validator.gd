@@ -170,10 +170,11 @@ func _validate_speaker_ref(context: String, speaker_id: Variant, speakers: Dicti
 
 func _validate_text_key(context: String, item: Dictionary, localization: Dictionary) -> void:
 	var text_key := String(item.get("text_key", ""))
-	if text_key == "":
-		_errors.append("%s is missing text_key." % context)
+	var inline_text := String(item.get("text", "")).strip_edges()
+	if text_key == "" and inline_text == "":
+		_errors.append("%s must define either text_key or text." % context)
 		return
-	if not localization.has(text_key):
+	if text_key != "" and not localization.has(text_key):
 		_errors.append("%s uses unknown text_key '%s'." % [context, text_key])
 
 func _validate_optional_portrait(context: String, portrait: Variant) -> void:

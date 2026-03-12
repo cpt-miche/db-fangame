@@ -15,10 +15,50 @@ Dialogue content is data-driven under `resources/dialogue/`.
 - **Node IDs**: short local IDs in a dialogue (`intro_1`, `battle_event`, `check_victory`).
 - **Text keys**: `dlg.<dialogue_id>.<node_or_choice_id>`.
 
+
+## Fast Path: Linear Scene Authoring (No Localization Required)
+
+If your story is mostly linear, you can author dialogue under the optional `scenes` map in `resources/dialogue/dialogues.json`.
+Each scene is automatically converted into nodes at load-time, so you only write line order and portraits.
+
+```json
+{
+  "scenes": {
+    "raditz_linear_intro": {
+      "player_speaker_id": "player",
+      "npc_speaker_id": "raditz",
+      "lines": [
+        {
+          "speaker_id": "raditz",
+          "npc_portrait": "res://assets/portraits/raditz_angry.png",
+          "text": "So this is Earth? Pathetic."
+        },
+        {
+          "speaker_id": "player",
+          "player_portrait": "res://assets/portraits/player_determined.png",
+          "text": "You're not getting past me."
+        }
+      ],
+      "end_action": "request_battle"
+    }
+  }
+}
+```
+
+Scene fields:
+- `lines` (required): ordered array of dialogue lines.
+- `speaker_id` (required on each line): used for name + default side/portrait fallback.
+- `text` or `text_key` (one required): inline text is supported, so localization is optional.
+- `player_portrait` / `npc_portrait` (optional): per-line PNG override.
+- `end_action` (optional): e.g. `request_battle` to jump into combat after the last line.
+- `enemy_id` (optional): explicit enemy for `request_battle` events.
+
+Use the scene key as your NPC `dialogue_key` in `WorldIso.tscn`/`enemy_npc.gd` config.
+
 ## Node Types
 
 - `line`
-  - Required: `speaker_id`, `text_key`, `next`.
+  - Required: `speaker_id`, (`text` or `text_key`), `next`.
   - Optional: `player_speaker_id`, `npc_speaker_id`, `player_portrait`, `npc_portrait`.
 - `choice`
   - Required: `choices` (array).
@@ -26,6 +66,9 @@ Dialogue content is data-driven under `resources/dialogue/`.
   - Optional on choice: `set_flags`.
 - `condition`
   - Required: `check`, `true_next`, `false_next`.
+  - `check.kind` examples:
+    - `prior_victory` with `id` set to an enemy id (`raditz_scout`).
+    - `prior_victory_current_enemy` (no `id` needed; uses the current encounter enemy).
 - `event`
   - Required: `action`.
   - Optional: `next` for non-terminal events.
@@ -36,7 +79,7 @@ Dialogue content is data-driven under `resources/dialogue/`.
 
 ## Localization Key Pattern
 
-All user-facing dialogue/choice text should be authored with `text_key`.
+User-facing text can be authored with either inline `text` or a `text_key`. Use `text_key` only when you want localization support.
 
 Example:
 
@@ -74,6 +117,10 @@ Portrait fallback order:
 3. Dialogue-level default speaker portrait.
 4. Existing portrait texture in UI.
 
+
+Enemy despawn behavior in the world is controlled per NPC via `despawn_on_defeat` on `EnemyNPC` instances.
+Set it to `false` for bosses/story NPCs you want to keep interactable after wins.
+
 ## Validation (Editor-Time)
 
 Run the validator script:
@@ -88,7 +135,7 @@ Validator checks:
 - missing or unknown speaker IDs
 - missing/invalid portraits
 - duplicate IDs across dialogue JSON files (`dialogues`, `speakers`, `entries`)
-- missing `text_key` and unknown localization keys
+- missing dialogue text (`text`/`text_key`) and unknown localization keys when `text_key` is used
 
 ## Optional CSV Workflow
 

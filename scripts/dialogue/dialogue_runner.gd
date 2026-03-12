@@ -193,6 +193,13 @@ func _evaluate_condition(condition: DialogueCondition) -> bool:
 					if _state_query == null:
 						return false
 					return _state_query.has_prior_victory(id)
+				"prior_victory_current_enemy":
+					if _state_query == null:
+						return false
+					var current_enemy_id := StringName(_context.get("enemy_id", &""))
+					if current_enemy_id == &"":
+						return false
+					return _state_query.has_prior_victory(current_enemy_id)
 				"inventory_item":
 					if _state_query == null:
 						return false
