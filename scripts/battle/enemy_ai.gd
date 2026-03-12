@@ -49,6 +49,18 @@ func _choose_transformation_action(enemy: FighterStats, transformations: Diction
 		return &"transform_form"
 	return &""
 
+func _should_use_enrage(enemy: FighterStats) -> bool:
+	if not enemy.has_utility_skill(&"enrage"):
+		return false
+	if enemy.enrage_turns_remaining > 0 or enemy.exhausted_turns_remaining > 0:
+		return false
+	var hp_ratio := float(enemy.hp) / maxf(1.0, float(enemy.max_hp))
+	if hp_ratio <= 0.25:
+		return randf() < 0.85
+	if hp_ratio <= 0.75:
+		return randf() < 0.35
+	return false
+
 func choose_action(enemy: FighterStats, attacks: Dictionary, transformations: Dictionary, infusion_ratio: float = 0.0) -> StringName:
 	var transformation_action := _choose_transformation_action(enemy, transformations)
 	if transformation_action != &"":
@@ -58,6 +70,12 @@ func choose_action(enemy: FighterStats, attacks: Dictionary, transformations: Di
 
 	if low_ki and enemy.stored_ki > 20 and enemy.has_utility_skill(&"power_up"):
 		return &"power_up"
+	if _can_transform(enemy, transformations):
+		return &"transform_form"
+	if _should_use_enrage(enemy):
+		return &"enrage"
+	if enemy.form_level == 0 and enemy.active_shuten_transformation_id == &"" and enemy.hp < 220 and enemy.stamina > 60 and enemy.has_utility_skill(&"shuten") and enemy.has_transformation_skill(&"shuten_gate_1"):
+		return &"shuten_gate_1"
 
 	var roll := randf()
 	if roll < 0.35 and _has_attack(enemy, &"strike", attacks) and _can_use_attack(enemy, attacks[&"strike"], infusion_ratio):
