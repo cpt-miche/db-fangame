@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 fighter_name = "Player"
-max_hp = 450
-hp = 450
+max_hp = 800
+hp = 800
 max_stamina = 240
 stamina = 240
 max_stored_ki = 860
