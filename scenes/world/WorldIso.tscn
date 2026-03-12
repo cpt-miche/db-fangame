@@ -34,6 +34,12 @@ despawn_on_defeat = false
 trigger_dialogue = true
 dialogue_key = &"daigo_intro"
 
+[node name="RenjiNPC" parent="Enemies" instance=ExtResource("3")]
+position = Vector2(650, 250)
+enemy_id = &"renji"
+display_name = "Renji"
+despawn_on_defeat = false
+
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(640, 360)
 enabled = true

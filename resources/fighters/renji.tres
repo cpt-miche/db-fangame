@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="FighterStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/fighter_stats.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+fighter_name = "Renji"
+max_hp = 1060
+hp = 1060
+max_stamina = 320
+stamina = 320
+max_stored_ki = 140
+stored_ki = 140
+max_drawn_ki = 55
+drawn_ki = 28
+physical_strength = 66
+ki_strength = 30
+speed = 56
+attack_skill_ids = PackedStringArray("strike", "ki_blast", "ki_volley", "ki_barrage")
+utility_skill_ids = PackedStringArray("power_up", "shuten")
+transformation_skill_ids = PackedStringArray("shuten_gate_1", "shuten_gate_2", "shuten_gate_3")

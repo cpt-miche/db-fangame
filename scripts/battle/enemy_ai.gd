@@ -27,15 +27,37 @@ func _can_transform(enemy: FighterStats, transformations: Dictionary) -> bool:
 			return true
 	return false
 
+func _choose_transformation_action(enemy: FighterStats, transformations: Dictionary) -> StringName:
+	if enemy.has_utility_skill(&"shuten") and enemy.form_level == 0:
+		var best_shuten_id: StringName = &""
+		var best_shuten_level: int = -1
+		for id in enemy.transformation_skill_ids:
+			if not String(id).begins_with("shuten_gate_"):
+				continue
+			if id == enemy.active_shuten_transformation_id:
+				continue
+			var transform: TransformationDef = transformations.get(id, null)
+			if transform == null or not transform.can_activate(enemy):
+				continue
+			if transform.form_level > best_shuten_level:
+				best_shuten_level = transform.form_level
+				best_shuten_id = id
+		if best_shuten_id != &"":
+			return best_shuten_id
+
+	if _can_transform(enemy, transformations):
+		return &"transform_form"
+	return &""
+
 func choose_action(enemy: FighterStats, attacks: Dictionary, transformations: Dictionary, infusion_ratio: float = 0.0) -> StringName:
+	var transformation_action := _choose_transformation_action(enemy, transformations)
+	if transformation_action != &"":
+		return transformation_action
+
 	var low_ki := enemy.drawn_ki < 30
 
 	if low_ki and enemy.stored_ki > 20 and enemy.has_utility_skill(&"power_up"):
 		return &"power_up"
-	if _can_transform(enemy, transformations):
-		return &"transform_form"
-	if enemy.form_level == 0 and enemy.active_shuten_transformation_id == &"" and enemy.hp < 220 and enemy.stamina > 60 and enemy.has_utility_skill(&"shuten") and enemy.has_transformation_skill(&"shuten_gate_1"):
-		return &"shuten_gate_1"
 
 	var roll := randf()
 	if roll < 0.35 and _has_attack(enemy, &"strike", attacks) and _can_use_attack(enemy, attacks[&"strike"], infusion_ratio):

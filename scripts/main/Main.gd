@@ -27,6 +27,7 @@ enum GameState {
 var enemy_map := {
 	&"martial_artist": preload("res://resources/fighters/martial_artist.tres"),
 	&"daigo": preload("res://resources/fighters/daigo.tres"),
+	&"renji": preload("res://resources/fighters/renji.tres"),
 }
 
 var speaker_registry_data: Dictionary = {}

@@ -138,7 +138,7 @@ func _choose_enemy_action_for_slot(action_type: String, enemy_infusion: float) -
 				return candidate
 		return &""
 
-	var secondary_candidates: Array[StringName] = [&"transform_form", &"shuten_gate_1", &"power_up"]
+	var secondary_candidates: Array[StringName] = [&"transform_form", &"shuten_gate_3", &"shuten_gate_2", &"shuten_gate_1", &"power_up"]
 	for candidate in secondary_candidates:
 		if _can_enemy_use_action(candidate, enemy_infusion):
 			return candidate
@@ -163,12 +163,12 @@ func _can_enemy_use_action(action_id: StringName, action_infusion: float) -> boo
 			return false
 		var next_form := _get_next_form_transformation(state.enemy)
 		return next_form != null and next_form.can_activate(state.enemy)
-	if action_id == &"shuten_gate_1":
-		if not state.enemy.has_utility_skill(&"shuten") or not state.enemy.has_transformation_skill(&"shuten_gate_1"):
+	if action_id == &"shuten_gate_1" or action_id == &"shuten_gate_2" or action_id == &"shuten_gate_3":
+		if not state.enemy.has_utility_skill(&"shuten") or not state.enemy.has_transformation_skill(action_id):
 			return false
-		if state.enemy.form_level > 0:
+		if state.enemy.form_level > 0 or state.enemy.active_shuten_transformation_id == action_id:
 			return false
-		var shuten: TransformationDef = transformations.get(&"shuten_gate_1", null)
+		var shuten: TransformationDef = transformations.get(action_id, null)
 		return shuten != null and shuten.can_activate(state.enemy)
 	return false
 
